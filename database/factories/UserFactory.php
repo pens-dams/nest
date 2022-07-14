@@ -22,7 +22,7 @@ class UserFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => $this->faker->name(),
@@ -33,12 +33,20 @@ class UserFactory extends Factory
         ];
     }
 
+    public function configure()
+    {
+        return $this->afterCreating(function (User $user) {
+            /** @var Team $team */
+            Team::factory()->for($user, 'owner')->create();
+        });
+    }
+
     /**
      * Indicate that the model's email address should be unverified.
      *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     * @return \Database\Factories\UserFactory
      */
-    public function unverified()
+    public function unverified(): static
     {
         return $this->state(function (array $attributes) {
             return [
@@ -52,7 +60,7 @@ class UserFactory extends Factory
      *
      * @return $this
      */
-    public function withPersonalTeam()
+    public function withPersonalTeam(): static
     {
         if (! Features::hasTeamFeatures()) {
             return $this->state([]);

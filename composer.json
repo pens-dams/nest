@@ -6,17 +6,21 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "dentro/yalr": "^1.2",
         "guzzlehttp/guzzle": "^7.2",
         "inertiajs/inertia-laravel": "^0.5.2",
         "laravel/fortify": "^1.13",
         "laravel/framework": "^9.19",
         "laravel/jetstream": "^2.10",
+        "laravel/octane": "^1.2",
         "laravel/sanctum": "^2.14.1",
         "laravel/tinker": "^2.7",
         "tightenco/ziggy": "^1.0"
     },
     "require-dev": {
+        "roave/security-advisories": "dev-latest",
         "fakerphp/faker": "^1.9.1",
+        "laravel/pint": "^0.2.4",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.1",
@@ -48,6 +52,9 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "dev": [
+            "php artisan octane:start --watch --port=8191"
         ]
     },
     "extra": {
