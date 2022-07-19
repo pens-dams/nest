@@ -21,12 +21,20 @@ class DatabaseSeeder extends Seeder
     {
          User::factory(10)->withPersonalTeam()->create();
 
-         User::factory()->create([
+         /** @var User $user */
+         $user = User::factory()->withPersonalTeam()->create([
              'name' => 'Test User',
              'email' => 'test@example.com',
          ]);
 
-         Computer::factory()->count(3)->create();
-         Drone::factory()->count(3)->create();
+         Computer::factory()
+             ->count(3)
+             ->afterCreating(fn(Computer $computer) => Drone::factory()
+                 ->for($computer, 'compute')
+                 ->for($user->currentTeam()->firstOrFail(), 'team')
+                 ->count(3)
+                 ->create()
+             )
+             ->create();
     }
 }

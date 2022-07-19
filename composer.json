@@ -55,7 +55,7 @@
             "@php artisan key:generate --ansi"
         ],
         "dev": [
-            "php artisan octane:start --watch --port=8191"
+            "php artisan octane:start --watch --port=8191 --env=local"
         ]
     },
     "extra": {

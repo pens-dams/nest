@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('compute_id')->constrained()->references('id')->on('computers');
             $table->string('name')->nullable();
             $table->string('serial_number')->nullable();
+            $table->string('photo_path')->nullable();
             $table->timestamps();
         });
     }

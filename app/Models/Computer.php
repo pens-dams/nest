@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
@@ -32,6 +33,11 @@ class Computer extends Authenticable
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'team_id', 'id');
+    }
+
+    public function drones(): HasMany
+    {
+        return $this->hasMany(Drone::class, 'compute_id', 'id');
     }
 
     public function newEloquentBuilder($query): SpatialBuilder
