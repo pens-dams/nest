@@ -33,14 +33,6 @@ class UserFactory extends Factory
         ];
     }
 
-    public function configure()
-    {
-        return $this->afterCreating(function (User $user) {
-            /** @var Team $team */
-            Team::factory()->for($user, 'owner')->create();
-        });
-    }
-
     /**
      * Indicate that the model's email address should be unverified.
      *

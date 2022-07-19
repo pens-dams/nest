@@ -2,12 +2,12 @@
 import {ref} from 'vue';
 import {Inertia} from '@inertiajs/inertia';
 import {Head, Link} from '@inertiajs/inertia-vue3';
-import JetApplicationMark from '@/Jetstream/ApplicationMark.vue';
-import JetBanner from '@/Jetstream/Banner.vue';
-import JetDropdown from '@/Jetstream/Dropdown.vue';
-import JetDropdownLink from '@/Jetstream/DropdownLink.vue';
-import JetNavLink from '@/Jetstream/NavLink.vue';
-import JetResponsiveNavLink from '@/Jetstream/ResponsiveNavLink.vue';
+import JetApplicationMark from '../Jetstream/ApplicationMark.vue';
+import JetBanner from '../Jetstream/Banner.vue';
+import JetDropdown from '../Jetstream/Dropdown.vue';
+import JetDropdownLink from '../Jetstream/DropdownLink.vue';
+import JetNavLink from '../Jetstream/NavLink.vue';
+import JetResponsiveNavLink from '../Jetstream/ResponsiveNavLink.vue';
 
 defineProps({
   title: String,
@@ -51,6 +51,15 @@ const logout = () => {
               <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                 <JetNavLink :href="route('dashboard.root')" :active="route().current('dashboard.root')">
                   Dashboard
+                </JetNavLink>
+                <JetNavLink :href="route('dashboard.compute')" :active="route().current('dashboard.compute')">
+                  Ground Control
+                </JetNavLink>
+                <JetNavLink :href="route('dashboard.mission')" :active="route().current('dashboard.mission')">
+                  Mission Control
+                </JetNavLink>
+                <JetNavLink :href="route('dashboard.monitor')" :active="route().current('dashboard.monitor')">
+                  Monitoring
                 </JetNavLink>
               </div>
             </div>
@@ -222,6 +231,15 @@ const logout = () => {
           <div class="pt-2 pb-3 space-y-1">
             <JetResponsiveNavLink :href="route('dashboard.root')" :active="route().current('dashboard.root')">
               Dashboard
+            </JetResponsiveNavLink>
+            <JetResponsiveNavLink :href="route('dashboard.compute')" :active="route().current('dashboard.compute')">
+              Ground Control
+            </JetResponsiveNavLink>
+            <JetResponsiveNavLink :href="route('dashboard.mission')" :active="route().current('dashboard.mission')">
+              Mission Control
+            </JetResponsiveNavLink>
+            <JetResponsiveNavLink :href="route('dashboard.monitor')" :active="route().current('dashboard.monitor')">
+              Monitoring
             </JetResponsiveNavLink>
           </div>
 

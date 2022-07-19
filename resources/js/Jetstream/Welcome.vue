@@ -10,21 +10,21 @@ import JetApplicationLogo from '@/Jetstream/ApplicationLogo.vue';
       </div>
 
       <div class="mt-8 text-2xl">
-        Welcome to your Jetstream application!
+        Welcome to Drone AirNav Nest App!
       </div>
 
       <div class="mt-6 text-gray-500">
-        Laravel Jetstream provides a beautiful, robust starting point for your next Laravel application. Laravel is
-        designed
-        to help you build your application using a development environment that is simple, powerful, and enjoyable. We
-        believe
-        you should love expressing your creativity through programming, so we have spent time carefully crafting the
-        Laravel
-        ecosystem to be a breath of fresh air. We hope you love it.
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aspernatur atque commodi culpa expedita ipsa laudantium
+        nulla perspiciatis quam tempora voluptate. A aliquid aspernatur blanditiis cumque distinctio est id illo ipsa
+        itaque labore laboriosam modi, molestiae nesciunt nihil nobis, placeat, provident quas similique sint veritatis.
+        Consequatur corporis dicta dolore harum impedit iure iusto laborum magnam, maxime nam odit perspiciatis placeat
+        possimus provident reiciendis repellat reprehenderit tempora ullam veritatis voluptates? Aliquid autem consequatur,
+        cupiditate dicta, ea eligendi, et fugiat laboriosam laborum libero maiores modi molestiae nobis non nulla obcaecati
+        porro provident repudiandae sit unde ut veritatis voluptate! Animi fuga quisquam velit veniam!
       </div>
     </div>
 
-    <div class="bg-gray-200 bg-opacity-25 grid grid-cols-1 md:grid-cols-2">
+    <div v-if="false" class="bg-gray-200 bg-opacity-25 grid grid-cols-1 md:grid-cols-2">
       <div class="p-6">
         <div class="flex items-center">
           <svg

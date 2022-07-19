@@ -71,6 +71,9 @@ return [
     ],
     'dashboard' => [
         DashboardController\RootController::class,
+        DashboardController\ComputeController::class,
+        DashboardController\MissionController::class,
+        DashboardController\MonitorController::class,
         /** @inject dashboard **/
     ],
 ];

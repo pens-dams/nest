@@ -11,15 +11,18 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('computers', function (Blueprint $table) {
+        Schema::create('computers', static function (Blueprint $table) {
             $table->id();
-            $table->foreignId('teams_id')->constrained()->references('id')->on('teams');
-            $table->string('token');
+            $table->foreignId('team_id')->constrained()->references('id')->on('teams');
             $table->string('name');
-            $table->text('description');
+            $table->string('state')->default('disconnected');
+            $table->text('description')->nullable();
             $table->string('ip')->nullable();
+            $table->string('location')->nullable();
+            $table->point('position')->nullable();
+            $table->dateTime('latest_handshake')->nullable();
             $table->timestamps();
         });
     }
@@ -29,7 +32,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('computers');
     }
