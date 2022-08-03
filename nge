@@ -5,6 +5,7 @@ set -o errexit    # Used to exit upon error, avoiding cascading errors
 IFS=$'\n\t'
 
 # read .env.docker file
+# shellcheck disable=SC1090
 source <(grep -v '^#' .env.docker | sed -E 's|^(.+)=(.*)$|: ${\1=\2}; export \1|g')
 
 # usage: file_env VAR [DEFAULT]
@@ -55,25 +56,25 @@ install() {
 composer() {
     file_env 'DOCKER_USER' 'dokar'
     echo "run composer on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user=${DOCKER_USER} octane composer $@
+    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane composer $@
 }
 
 shell() {
     file_env 'DOCKER_USER' 'dokar'
     echo "run shell on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user=${DOCKER_USER} octane bash
+    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane bash
 }
 
 artisan() {
     file_env 'DOCKER_USER' 'dokar'
     echo "run artisan on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user=${DOCKER_USER} octane php artisan --env=docker $@
+    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane php artisan --env=docker $@
 }
 
 npm() {
     file_env 'DOCKER_USER' 'dokar'
     echo "run npm on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user=${DOCKER_USER} octane npm $@
+    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane npm $@
 }
 
 up() {

@@ -44,6 +44,7 @@ services:
     volumes:
       # laravel comes up with public dir inside workdir, so we will mount only /var/www
       - ./:/var/www
+      - ./docker/matter/octane/runner.sh:/runner.sh
     environment:
       DOCKER_ENV: ${APP_ENV}
     networks:

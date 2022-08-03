@@ -19,17 +19,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-         User::factory(10)->withPersonalTeam()->create();
+        User::factory(10)->withPersonalTeam()->create();
 
-         /** @var User $user */
-         $user = User::factory()->withPersonalTeam()->create([
-             'name' => 'Test User',
-             'email' => 'test@example.com',
-         ]);
+        /** @var User $user */
+        $user = User::factory()->withPersonalTeam()->create([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
 
-         Computer::factory()
+        Computer::factory()
              ->count(3)
-             ->afterCreating(fn(Computer $computer) => Drone::factory()
+             ->afterCreating(fn (Computer $computer) => Drone::factory()
                  ->for($computer, 'compute')
                  ->for($user->currentTeam()->firstOrFail(), 'team')
                  ->count(3)

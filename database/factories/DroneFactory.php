@@ -23,7 +23,7 @@ class DroneFactory extends Factory
                 'build/drone-hi-end.jpg',
                 'build/drone-mini.jpg',
                 'build/quadcopter.jpg',
-            ])
+            ]),
         ];
     }
 }

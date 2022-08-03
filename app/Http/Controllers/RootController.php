@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Dentro\Yalr\Attributes\Get;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
-use Dentro\Yalr\Attributes\Get;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Foundation\Application;
 
 class RootController extends Controller
 {

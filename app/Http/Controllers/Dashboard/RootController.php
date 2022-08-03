@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Http\Controllers\Controller;
+use Dentro\Yalr\Attributes\Get;
 use Inertia\Inertia;
 use Inertia\Response;
-use Dentro\Yalr\Attributes\Get;
-use App\Http\Controllers\Controller;
 
 class RootController extends Controller
 {

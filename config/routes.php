@@ -63,17 +63,17 @@ return [
 
     'web' => [
         App\Http\Controllers\RootController::class,
-        /** @inject web **/
+    /** @inject web **/
     ],
     'api' => [
         App\Http\Controllers\Api\UserController::class,
-        /** @inject api **/
+    /** @inject api **/
     ],
     'dashboard' => [
         DashboardController\RootController::class,
         DashboardController\ComputeController::class,
         DashboardController\MissionController::class,
         DashboardController\MonitorController::class,
-        /** @inject dashboard **/
+    /** @inject dashboard **/
     ],
 ];

@@ -41,6 +41,6 @@ class ComputerFactory extends Factory
 
         return $this
             ->for($availableTeam, 'team')
-            ->afterCreating(fn(Computer $computer) => $computer->createToken('main'));
+            ->afterCreating(fn (Computer $computer) => $computer->createToken('main'));
     }
 }

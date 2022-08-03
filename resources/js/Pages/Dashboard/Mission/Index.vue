@@ -11,7 +11,7 @@ const posts = [
       'Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto accusantium praesentium eius, ut atque fuga culpa, similique sequi cum eos quis dolorum.',
     date: 'Mar 16, 2020',
     datetime: '2020-03-16',
-    imageUrl: '/storage/drone-hi-end.jpg',
+    imageUrl: '/storage/build/drone-hi-end.jpg',
     readingTime: '6 min',
     author: {
       name: 'Roel Aufderehar',
@@ -28,7 +28,7 @@ const posts = [
       'Lorem ipsum dolor sit amet consectetur adipisicing elit. Velit facilis asperiores porro quaerat doloribus, eveniet dolore. Adipisci tempora aut inventore optio animi., tempore temporibus quo laudantium.',
     date: 'Mar 10, 2020',
     datetime: '2020-03-10',
-    imageUrl: '/storage/drone-mini.jpg',
+    imageUrl: '/storage/build/drone-mini.jpg',
     readingTime: '4 min',
     author: {
       name: 'Brenna Goyette',
@@ -45,7 +45,7 @@ const posts = [
       'Lorem ipsum dolor sit amet consectetur adipisicing elit. Sint harum rerum voluptatem quo recusandae magni placeat saepe molestiae, sed excepturi cumque corporis perferendis hic.',
     date: 'Feb 12, 2020',
     datetime: '2020-02-12',
-    imageUrl: '/storage/quadcopter.jpg',
+    imageUrl: '/storage/build/quadcopter.jpg',
     readingTime: '11 min',
     author: {
       name: 'Daniela Metz',

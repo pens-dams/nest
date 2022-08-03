@@ -2,8 +2,8 @@
 
 namespace App\Http\Routes;
 
-use Illuminate\Routing\Router;
 use Dentro\Yalr\Contracts\Bindable;
+use Illuminate\Routing\Router;
 
 class RouteModelBinding implements Bindable
 {
