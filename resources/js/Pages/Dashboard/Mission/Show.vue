@@ -8,7 +8,7 @@ const props = defineProps({
 import {Loader} from '@googlemaps/js-api-loader'
 import * as THREE from 'three'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
-import {onMounted, ref} from "vue"
+import {onMounted, reactive, ref, watch} from "vue"
 
 const mapElement = ref()
 
@@ -34,6 +34,8 @@ async function initMap() {
 
   return new google.maps.Map(mapDiv, mapOptions)
 }
+
+const points = reactive([])
 
 function initWebGLOverlayView(map) {
   let scene, renderer, camera, loader
@@ -111,8 +113,30 @@ onMounted(async () => {
     // Configure the click listener.
     map.addListener("click", (mapsMouseEvent) => {
       console.log(mapsMouseEvent)
+      points.push({
+        lat: mapsMouseEvent.latLng.lat(),
+        lng: mapsMouseEvent.latLng.lng(),
+      })
     });
   }
+
+  let flightPath
+
+  watch(points, (points) => {
+    if (points.length > 1) {
+      flightPath?.setMap(null)
+
+      flightPath = new google.maps.Polyline({
+        path: points,
+        geodesic: true,
+        strokeColor: "#e11d48",
+        strokeOpacity: 1.0,
+        strokeWeight: 5,
+      });
+
+      flightPath.setMap(map);
+    }
+  })
 
   function drawRedLineMap(map) {
     const flightPlanCoordinates = [
