@@ -13,7 +13,7 @@ class MissionController extends Controller
     #[Get('mission', name: 'dashboard.mission')]
     public function index(): Response
     {
-        $drones = Drone::query()->get();
+        $drones = Drone::query()->where('team_id', $this->getAuthenticatedUser()->currentTeam->id)->get();
 
         return Inertia::render('Dashboard/Mission/Index', compact('drones'));
     }

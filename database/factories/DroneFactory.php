@@ -20,9 +20,9 @@ class DroneFactory extends Factory
             'name' => $this->faker->lastName().'\'s drone.',
             'serial_number' => $this->faker->macAddress(),
             'photo_path' => $this->faker->randomElement([
-                'build/drone-hi-end.jpg',
-                'build/drone-mini.jpg',
-                'build/quadcopter.jpg',
+                '/storage/build/drone-hi-end.jpg',
+                '/storage/build/drone-mini.jpg',
+                '/storage/build/quadcopter.jpg',
             ]),
         ];
     }
