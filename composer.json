@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.0.2",
         "dentro/yalr": "^1.2",
+        "dicibi/indoregion": "^1.1",
         "guzzlehttp/guzzle": "^7.2",
         "inertiajs/inertia-laravel": "^0.5.2",
         "laravel/fortify": "^1.13",

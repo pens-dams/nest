@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('serial_number')->nullable();
             $table->string('photo_path')->nullable();
+
             $table->timestamps();
         });
     }

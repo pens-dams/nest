@@ -17,7 +17,7 @@ class DroneFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->name().'\'s drone.',
+            'name' => $this->faker->lastName().'\'s drone.',
             'serial_number' => $this->faker->macAddress(),
             'photo_path' => $this->faker->randomElement([
                 'build/drone-hi-end.jpg',

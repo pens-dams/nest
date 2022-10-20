@@ -15,9 +15,9 @@ const apiOptions = {
 const mapOptions = {
   "tilt": 67,
   "heading": 0,
-  "zoom": 19.5,
-  "center": {lat: 35.6594945, lng: 139.6999859},
-  "mapId": "43bf1eaa5b58a8df",
+  "zoom": 14.5,
+  "center": {lat: -7.250445, lng: 112.768845},
+  "mapId": "42d59f7789a288e6",
 }
 
 let google
@@ -35,7 +35,7 @@ function initWebGLOverlayView(map) {
 
   const webGLOverlayView = new google.maps.WebGLOverlayView()
 
-  webGLOverlayView.onAdd = () => {
+  const onAdd3dDrone = () => {
     scene = new THREE.Scene()
     camera = new THREE.PerspectiveCamera()
     const ambientLight = new THREE.AmbientLight(0xffffff, 1) // soft white light
@@ -57,6 +57,7 @@ function initWebGLOverlayView(map) {
       }
     )
   }
+  webGLOverlayView.onAdd = onAdd3dDrone
   webGLOverlayView.onContextRestored = ({gl}) => {
     renderer = new THREE.WebGLRenderer({
       canvas: gl.canvas,
@@ -65,48 +66,88 @@ function initWebGLOverlayView(map) {
     })
 
     renderer.autoClear = false
-
-    // loader.manager.onLoad = () => {
-    //     renderer.setAnimationLoop(() => {
-    //       map.moveCamera({
-    //         "tilt": mapOptions.tilt,
-    //         "heading": mapOptions.heading,
-    //         "zoom": mapOptions.zoom
-    //       })
-    //
-    //       if (mapOptions.tilt < 67.5) {
-    //         mapOptions.tilt += 0.5
-    //       } else if (mapOptions.heading <= 360) {
-    //         mapOptions.heading += 0.2
-    //       } else {
-    //         renderer.setAnimationLoop(null)
-    //       }
-    //     })
-    // }
   }
 
-
-  webGLOverlayView.onDraw = ({gl, transformer}) => {
-    const latLngAltitudeLiteral = {
-      lat: mapOptions.center.lat,
-      lng: mapOptions.center.lng,
+  const drones = [
+    {
+      lat: -7.2619491,
+      lng: 112.7478422,
       altitude: 40
+    },
+    {
+      lat: -7.261949,
+      lng: 112.747542,
+      altitude: 80
+    },
+  ]
+
+  webGLOverlayView.onDraw = ({transformer}) => {
+    webGLOverlayView.requestRedraw()
+
+    for (const drone of drones) {
+      const matrix = transformer.fromLatLngAltitude(drone)
+
+      camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix)
+
+      renderer.render(scene, camera)
     }
 
-    const matrix = transformer.fromLatLngAltitude(latLngAltitudeLiteral)
-    camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix)
-
-    webGLOverlayView.requestRedraw()
-    renderer.render(scene, camera)
     renderer.resetState()
   }
 
   webGLOverlayView.setMap(map)
-  // WebGLOverlayView code goes here
 }
 
 onMounted(async () => {
   const map = await initMap()
+
+  function drawRedLineMap(map) {
+    const flightPlanCoordinates = [
+      {lat: -7.2756967, lng: 112.7761407}, // galaxy mall
+      {lat: -7.2619491, lng: 112.7478422}, // grand city
+      {lat: -7.2627836, lng: 112.745902},
+      {lat: -7.2623683, lng: 112.7362544},
+      {lat: -7.285015, lng: 112.739325},
+      {lat: -7.3138113, lng: 112.7333834},
+      {lat: -7.2930221, lng: 112.7171467},
+      {lat: -7.3070382, lng: 112.6952806},
+    ];
+
+    const flightPath = new google.maps.Polyline({
+      path: flightPlanCoordinates,
+      geodesic: true,
+      strokeColor: "#e11d48",
+      strokeOpacity: 1.0,
+      strokeWeight: 5,
+    });
+
+    flightPath.setMap(map);
+  }
+
+  function drawBlueLineMap(map) {
+    const flightPlanCoordinates = [
+      {lat: -7.3161807, lng: 112.7463608}, // plaza marina
+      {lat: -7.315938, lng: 112.784272}, // kebun bibit wonorejo
+      {lat: -7.2770698, lng: 112.8039157}, // east coast
+      {lat: -7.255441, lng: 112.783058},
+      {lat: -7.288537, lng: 112.744931},
+      {lat: -7.2930221, lng: 112.7171467},
+    ];
+
+    const flightPath = new google.maps.Polyline({
+      path: flightPlanCoordinates,
+      geodesic: true,
+      strokeColor: "#2563eb",
+      strokeOpacity: 1.0,
+      strokeWeight: 5,
+    });
+
+    flightPath.setMap(map);
+  }
+
+  drawRedLineMap(map)
+  drawBlueLineMap(map)
+
   initWebGLOverlayView(map)
 })
 

@@ -1,6 +1,16 @@
 <script setup>
 import AppLayout from '../../../Layouts/AppLayout.vue'
 import {LocationMarkerIcon} from '@heroicons/vue/solid'
+import {toRefs} from "vue";
+
+const props = defineProps({
+  drones: {
+    required: true,
+    type: Array,
+  }
+})
+
+const { drones } = toRefs(props)
 
 const posts = [
   {
