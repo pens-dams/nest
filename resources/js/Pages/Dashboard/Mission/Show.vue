@@ -42,7 +42,6 @@ onMounted(async () => {
 
     // Configure the click listener.
     map.addListener("click", (mapsMouseEvent) => {
-      console.log(mapsMouseEvent)
       points.push({
         lat: mapsMouseEvent.latLng.lat(),
         lng: mapsMouseEvent.latLng.lng(),
@@ -51,6 +50,8 @@ onMounted(async () => {
   }
 
   let flightPath
+
+  let markers = []
 
   watch(points, (points) => {
     if (points.length > 1) {
@@ -68,6 +69,19 @@ onMounted(async () => {
     }
   })
 
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i]
+
+    const marker = new google.maps.Marker({
+      position: point,
+      title: "Point : "+ (i+1),
+    })
+
+    marker.setMap(map)
+
+    markers[i] = marker
+  }
+
   getCoordinateOnClick()
 })
 
@@ -81,8 +95,22 @@ onMounted(async () => {
     </h2>
   </template>
 
-  <div class="pb-12" id="mapContainer">
-    <div ref="mapElement"/>
+  <div class="flex">
+    <div class="flex-row pb-12 w-3/4" id="mapContainer">
+      <div ref="mapElement"/>
+    </div>
+    <div class="h-75 w-1/4 p-4">
+      <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6 w-full">
+        <div class="-ml-4 -mt-2 flex flex-wrap items-center justify-between sm:flex-nowrap">
+          <div class="ml-4 mt-2">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Drone</h3>
+          </div>
+          <div class="ml-4 mt-2 flex-shrink-0">
+            <button type="button" class="relative inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Start Mission</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </AppLayout>
 </template>

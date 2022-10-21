@@ -21,6 +21,8 @@ class MissionController extends Controller
     #[Get('mission/{drone}', name: 'dashboard.mission.show')]
     public function show(Drone $drone): Response
     {
-        return Inertia::render('Dashboard/Mission/Show', compact('drone'));
+        $title = 'Manage Mission for '.$drone->name;
+
+        return Inertia::render('Dashboard/Mission/Show', compact('drone', 'title'));
     }
 }
