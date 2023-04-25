@@ -1,7 +1,8 @@
 <script setup>
 import AppLayout from '../../../Layouts/AppLayout.vue'
-import {DesktopComputerIcon} from '@heroicons/vue/solid'
+import {ComputerDesktopIcon} from '@heroicons/vue/24/solid'
 import {toRefs} from "vue";
+import route from "ziggy-js";
 
 const props = defineProps({
   drones: {
@@ -85,8 +86,8 @@ const posts = [
               </div>
               <div class="flex-1 bg-white p-6 flex flex-col justify-between">
                 <div class="flex-1">
-                  <p class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 text-indigo-600">
-                    <DesktopComputerIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true"/>
+                  <p class="mt-2 flex items-center text-sm sm:mt-0 text-indigo-600">
+                    <ComputerDesktopIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true"/>
                     <a href="#">
                       {{ drone.serial_number }}
                     </a>

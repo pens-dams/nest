@@ -1,7 +1,7 @@
 <script setup>
 import {ref} from 'vue';
-import {Inertia} from '@inertiajs/inertia';
-import {useForm, usePage} from '@inertiajs/inertia-vue3';
+import {router} from '@inertiajs/vue3';
+import {useForm, usePage} from '@inertiajs/vue3';
 import JetActionMessage from '@/Jetstream/ActionMessage.vue';
 import JetActionSection from '@/Jetstream/ActionSection.vue';
 import JetButton from '@/Jetstream/Button.vue';
@@ -47,7 +47,7 @@ const addTeamMember = () => {
 };
 
 const cancelTeamInvitation = (invitation) => {
-  Inertia.delete(route('team-invitations.destroy', invitation), {
+  router.delete(route('team-invitations.destroy', invitation), {
     preserveScroll: true,
   });
 };

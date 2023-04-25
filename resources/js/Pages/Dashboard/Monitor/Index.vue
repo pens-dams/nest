@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import AppLayout from '../../../Layouts/AppLayout.vue'
 import {Loader} from '@googlemaps/js-api-loader'
 import * as THREE from 'three'
@@ -35,7 +35,7 @@ function initWebGLOverlayView(map) {
 
   const webGLOverlayView = new google.maps.WebGLOverlayView()
 
-  const onAdd3dDrone = () => {
+  webGLOverlayView.onAdd = () => {
     scene = new THREE.Scene()
     camera = new THREE.PerspectiveCamera()
     const ambientLight = new THREE.AmbientLight(0xffffff, 1) // soft white light
@@ -44,7 +44,7 @@ function initWebGLOverlayView(map) {
     directionalLight.position.set(0.5, -1, 0.5)
     scene.add(directionalLight)
 
-    loader = new GLTFLoader()
+    loader = new GLTFLoader({})
 
     const source = '/files/drone.glb'
 
@@ -57,7 +57,7 @@ function initWebGLOverlayView(map) {
       }
     )
   }
-  webGLOverlayView.onAdd = onAdd3dDrone
+
   webGLOverlayView.onContextRestored = ({gl}) => {
     renderer = new THREE.WebGLRenderer({
       canvas: gl.canvas,

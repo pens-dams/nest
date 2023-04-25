@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Computer;
 use App\Models\Drone;
 use App\Models\User;
-use Dicibi\IndoRegion\Database\Seeders\IndoRegionSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,14 +14,12 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        $this->call(IndoRegionSeeder::class);
-
         User::factory(10)->withPersonalTeam()->create();
 
         /** @var User $user */
         $user = User::factory()->withPersonalTeam()->create([
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'test@nest.roisc.pens.ac.id',
         ]);
 
         Computer::factory()
