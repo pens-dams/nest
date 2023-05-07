@@ -12,20 +12,21 @@ return new class extends Migration
             $table->id();
             $table->foreignId('drone_id')->constrained()->references('id')->on('drones');
             $table->string('code');
-            $table->dateTime('departure_time');
-            // latitudes and longitudes
+            $table->dateTime('departure');
 
-            $table->point('latitude_from');
-            $table->point('longitude_from');
-            $table->point('latitude_to');
-            $table->point('longitude_to');
+            $table->point('from');
+            $table->point('to');
+
             $table->integer('planned_altitude')->nullable();
             $table->integer('speed')->nullable();
+
+            $table->string('name')->nullable();
+            $table->json('meta')->nullable();
             $table->timestamps();
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('flights');
     }

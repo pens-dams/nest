@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('drones', function (Blueprint $table) {
             $table->id();
@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('serial_number')->nullable();
             $table->string('photo_path')->nullable();
+
+            $table->point('standby_location')->nullable();
 
             $table->timestamps();
         });
@@ -30,7 +32,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('drones');
     }

@@ -24,27 +24,38 @@ class Computer extends Authenticable
     protected $casts = [
         'token' => 'encrypted',
         'position' => Point::class,
+        'latest_handshake' => 'datetime',
     ];
 
-    protected $dates = [
-        'latest_handshake',
-    ];
-
+    /**
+     * @return BelongsTo<Team, Computer>
+     */
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'team_id', 'id');
     }
 
+    /**
+     * @return HasMany<Drone>
+     */
     public function drones(): HasMany
     {
         return $this->hasMany(Drone::class, 'compute_id', 'id');
     }
 
+    /**
+     * @param $query
+     * @return SpatialBuilder<Computer>
+     */
     public function newEloquentBuilder($query): SpatialBuilder
     {
+        // @phpstan-ignore-next-line
         return new SpatialBuilder($query);
     }
 
+    /**
+     * @return SpatialBuilder<Computer>
+     */
     public static function query(): SpatialBuilder
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */

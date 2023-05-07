@@ -1,0 +1,20 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+parameters:
+    checkOctaneCompatibility: true
+    paths:
+        - app
+    level: 9
+    ignoreErrors:
+        - "#Access to an undefined property#"
+        - "#PHPDoc tag @property has invalid#"
+    excludePaths:
+        - tests/*
+        - database/*
+        - bootstrap/*
+        - storage/*
+        - vendor/*
+        - node_modules/*
+        - public/*
+        - config/*
+        - patches/*

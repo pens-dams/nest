@@ -16,7 +16,7 @@ class Team extends JetstreamTeam
     /**
      * The attributes that should be cast.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $casts = [
         'personal_team' => 'boolean',
@@ -36,7 +36,7 @@ class Team extends JetstreamTeam
     /**
      * The event map for the model.
      *
-     * @var array
+     * @var array<string, class-string>
      */
     protected $dispatchesEvents = [
         'created' => TeamCreated::class,
@@ -44,6 +44,9 @@ class Team extends JetstreamTeam
         'deleted' => TeamDeleted::class,
     ];
 
+    /**
+     * @return HasMany<Computer>
+     */
     public function computers(): HasMany
     {
         return $this->hasMany(Computer::class, 'team_id', 'id');
