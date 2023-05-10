@@ -136,18 +136,18 @@ const displayableRole = (role) => {
                 :key="role.key"
                 type="button"
                 class="relative px-4 py-3 inline-flex w-full rounded-lg focus:z-10 focus:outline-none focus:border-blue-300 focus:ring focus:ring-blue-200"
-                :class="{'border-t border-gray-200 rounded-t-none': i > 0, 'rounded-b-none': i != Object.keys(availableRoles).length - 1}"
+                :class="{'border-t border-gray-200 rounded-t-none': i > 0, 'rounded-b-none': i !== Object.keys(availableRoles).length - 1}"
                 @click="addTeamMemberForm.role = role.key"
               >
-                <div :class="{'opacity-50': addTeamMemberForm.role && addTeamMemberForm.role != role.key}">
+                <div :class="{'opacity-50': addTeamMemberForm.role && addTeamMemberForm.role !== role.key}">
                   <!-- Role Name -->
                   <div class="flex items-center">
-                    <div class="text-sm text-gray-600" :class="{'font-semibold': addTeamMemberForm.role == role.key}">
+                    <div class="text-sm text-gray-600" :class="{'font-semibold': addTeamMemberForm.role === role.key}">
                       {{ role.name }}
                     </div>
 
                     <svg
-                      v-if="addTeamMemberForm.role == role.key"
+                      v-if="addTeamMemberForm.role === role.key"
                       class="ml-2 h-5 w-5 text-green-400"
                       fill="none"
                       stroke-linecap="round"

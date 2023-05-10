@@ -1,7 +1,7 @@
 <script setup>
 import {ref} from 'vue';
 import {router} from '@inertiajs/vue3';
-import {Link, useForm} from '@inertiajs/vue3';
+import {Link as InertiaLink, useForm} from '@inertiajs/vue3';
 import JetButton from '@/Jetstream/Button.vue';
 import JetFormSection from '@/Jetstream/FormSection.vue';
 import JetInput from '@/Jetstream/Input.vue';
@@ -156,7 +156,7 @@ const clearPhotoFileInput = () => {
           <p class="text-sm mt-2">
             Your email address is unverified.
 
-            <Link
+            <InertiaLink
               :href="route('verification.send')"
               method="post"
               as="button"
@@ -164,7 +164,7 @@ const clearPhotoFileInput = () => {
               @click.prevent="sendEmailVerification"
             >
               Click here to re-send the verification email.
-            </Link>
+            </InertiaLink>
           </p>
 
           <div v-show="verificationLinkSent" class="mt-2 font-medium text-sm text-green-600">

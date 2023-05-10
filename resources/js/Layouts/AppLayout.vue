@@ -1,7 +1,7 @@
 <script setup>
 import {ref} from 'vue';
 import {router} from '@inertiajs/vue3';
-import {Head, Link} from '@inertiajs/vue3';
+import {Head as InertiaHead, Link as InertiaLink} from '@inertiajs/vue3';
 import JetApplicationMark from '../Jetstream/ApplicationMark.vue';
 import JetBanner from '../Jetstream/Banner.vue';
 import JetDropdown from '../Jetstream/Dropdown.vue';
@@ -32,7 +32,7 @@ const logout = () => {
 
 <template>
   <div>
-    <Head :title="title"/>
+    <InertiaHead :title="title"/>
 
     <JetBanner/>
 
@@ -44,9 +44,9 @@ const logout = () => {
             <div class="flex">
               <!-- Logo -->
               <div class="shrink-0 flex items-center">
-                <Link :href="route('dashboard.root')">
+                <InertiaLink :href="route('dashboard.root')">
                   <JetApplicationMark class="block h-9 w-auto"/>
-                </Link>
+                </InertiaLink>
               </div>
 
               <!-- Navigation Links -->
@@ -119,7 +119,7 @@ const logout = () => {
                             <JetDropdownLink as="button">
                               <div class="flex items-center">
                                 <svg
-                                  v-if="team.id == $page.props.auth?.user.current_team_id"
+                                  v-if="Number(team.id) === Number($page.props.auth?.user.current_team_id)"
                                   class="mr-2 h-5 w-5 text-green-400"
                                   fill="none"
                                   stroke-linecap="round"
@@ -311,7 +311,7 @@ const logout = () => {
                     <JetResponsiveNavLink as="button">
                       <div class="flex items-center">
                         <svg
-                          v-if="team.id == $page.props.auth?.user.current_team_id"
+                          v-if="Number(team.id) === Number($page.props.auth?.user.current_team_id)"
                           class="mr-2 h-5 w-5 text-green-400"
                           fill="none"
                           stroke-linecap="round"

@@ -1,165 +1,97 @@
 <script setup lang="ts">
-import AppLayout from "../../../Layouts/AppLayout.vue";
-import { Loader } from "@googlemaps/js-api-loader";
-import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { onMounted, ref } from "vue";
+import AppLayout from '../../../Layouts/AppLayout.vue'
+import { onMounted, ref } from 'vue'
+import type { PropType } from 'vue'
+import GoogleMap from '@/Utils/google-maps'
+import type { Flight } from '@/Types/laravel'
+import { Drone } from '@/Types/local'
+import LatLngAltitudeLiteral = google.maps.LatLngAltitudeLiteral
+import DroneDrawer from '@/Utils/drawers/drone-drawer'
 
-const mapElement = ref();
+const mapElement = ref()
 
-const apiOptions = {
-  "apiKey": "AIzaSyB5cKCyCU8rDJjgDgWj0004ZflsFphwFCU",
-  "version": "beta"
-};
+const props = defineProps({
+  flights: {
+    type: Array as PropType<Flight[]>,
+    required: true,
+  },
+})
 
-const mapOptions = {
-  "tilt": 67,
-  "heading": 0,
-  "zoom": 14.5,
-  "center": { lat: -7.250445, lng: 112.768845 },
-  "mapId": "42d59f7789a288e6"
-};
+const drones = _.map(props.flights, (flight: Flight) => {
+  const origin: LatLngAltitudeLiteral = {
+    lat: flight.from.coordinates[1],
+    lng: flight.from.coordinates[0],
+    altitude: 40,
+  }
 
-let google;
+  const destination: LatLngAltitudeLiteral = {
+    lat: flight.to.coordinates[1],
+    lng: flight.to.coordinates[0],
+    altitude: 40,
+  }
 
-async function initMap() {
-  const mapDiv = mapElement.value;
-  const apiLoader = new Loader(apiOptions);
-  google = await apiLoader.load();
+  const current: LatLngAltitudeLiteral = {
+    lat: flight.from.coordinates[1],
+    lng: flight.from.coordinates[0],
+    altitude: 40,
+  }
 
-  return new google.maps.Map(mapDiv, mapOptions);
-}
-
-function initWebGLOverlayView(map) {
-  let scene, renderer, camera, loader;
-
-  const webGLOverlayView = new google.maps.WebGLOverlayView();
-
-  webGLOverlayView.onAdd = () => {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera();
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1); // soft white light
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.75);
-    directionalLight.position.set(0.5, -1, 0.5);
-    scene.add(directionalLight);
-
-    loader = new GLTFLoader(THREE.DefaultLoadingManager);
-
-    const source = "/files/drone.glb";
-
-    loader.load(
-      source,
-      gltf => {
-        gltf.scene.scale.set(25, 25, 25);
-        gltf.scene.rotation.x = 90 * Math.PI / 180;
-        scene.add(gltf.scene);
-      }
-    );
-  };
-
-  webGLOverlayView.onContextRestored = ({ gl }) => {
-    const attributes = gl.getContextAttributes();
-
-    renderer = new THREE.WebGLRenderer({
-      canvas: gl.canvas,
-      context: gl,
-      alpha: attributes.alpha,
-      antialias: attributes.antialias,
-      depth: attributes.depth,
-      failIfMajorPerformanceCaveat: attributes.failIfMajorPerformanceCaveat,
-      powerPreference: attributes.powerPreference,
-      premultipliedAlpha: attributes.premultipliedAlpha,
-      preserveDrawingBuffer: attributes.preserveDrawingBuffer,
-      stencil: attributes.stencil,
-    });
-
-    renderer.autoClear = false;
-  };
-
-  const drones = [
-    {
-      lat: -7.2619491,
-      lng: 112.7478422,
-      altitude: 40
-    },
-    {
-      lat: -7.261949,
-      lng: 112.747542,
-      altitude: 80
-    }
-  ];
-
-  webGLOverlayView.onDraw = ({ transformer }) => {
-    webGLOverlayView.requestRedraw();
-
-    for (const drone of drones) {
-      const matrix = transformer.fromLatLngAltitude(drone);
-
-      camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
-
-      renderer.render(scene, camera);
-    }
-
-    renderer.resetState();
-  };
-
-  webGLOverlayView.setMap(map);
-}
+  return new Drone(origin, destination, flight.drone, current)
+})
 
 onMounted(async () => {
-  const map = await initMap();
-
-  function drawRedLineMap(map) {
-    const flightPlanCoordinates = [
-      { lat: -7.2756967, lng: 112.7761407 }, // galaxy mall
-      { lat: -7.2619491, lng: 112.7478422 }, // grand city
-      { lat: -7.2627836, lng: 112.745902 },
-      { lat: -7.2623683, lng: 112.7362544 },
-      { lat: -7.285015, lng: 112.739325 },
-      { lat: -7.3138113, lng: 112.7333834 },
-      { lat: -7.2930221, lng: 112.7171467 },
-      { lat: -7.3070382, lng: 112.6952806 }
-    ];
-
-    const flightPath = new google.maps.Polyline({
-      path: flightPlanCoordinates,
-      geodesic: true,
-      strokeColor: "#e11d48",
-      strokeOpacity: 1.0,
-      strokeWeight: 5
-    });
-
-    flightPath.setMap(map);
+  if (drones.length === 0) {
+    return
   }
 
-  function drawBlueLineMap(map) {
-    const flightPlanCoordinates = [
-      { lat: -7.3161807, lng: 112.7463608 }, // plaza marina
-      { lat: -7.315938, lng: 112.784272 }, // kebun bibit wonorejo
-      { lat: -7.2770698, lng: 112.8039157 }, // east coast
-      { lat: -7.255441, lng: 112.783058 },
-      { lat: -7.288537, lng: 112.744931 },
-      { lat: -7.2930221, lng: 112.7171467 }
-    ];
+  const googleMap = new GoogleMap(mapElement.value)
+  await googleMap.initMap({
+    lat: drones[0].origin.lat,
+    lng: drones[0].origin.lng,
+  })
 
-    const flightPath = new google.maps.Polyline({
-      path: flightPlanCoordinates,
-      geodesic: true,
-      strokeColor: "#2563eb",
-      strokeOpacity: 1.0,
-      strokeWeight: 5
-    });
-
-    flightPath.setMap(map);
+  for (const flight of props.flights) {
+    googleMap.addPolyline([
+      {
+        lat: flight.from.coordinates[1],
+        lng: flight.from.coordinates[0],
+      },
+      {
+        lat: flight.to.coordinates[1],
+        lng: flight.to.coordinates[0],
+      },
+    ])
   }
 
-  drawRedLineMap(map);
-  drawBlueLineMap(map);
+  const droneDrawer =
+    googleMap.threeRenderer.getDrawer<DroneDrawer>(DroneDrawer)
 
-  initWebGLOverlayView(map);
-});
+  for await (const drone of drones) {
+    await droneDrawer.addDrone(drone)
+  }
 
+  droneDrawer.startAnimation()
+
+  // const lineDrawer = await googleMap.threeRenderer.getDrawer<LineDrawer>(
+  //   LineDrawer
+  // )
+  //
+  // for (const flight of props.flights) {
+  //   lineDrawer.addLine({
+  //     origin: {
+  //       lat: flight.from.coordinates[1],
+  //       lng: flight.from.coordinates[0],
+  //       altitude: 40,
+  //     },
+  //     destination: {
+  //       lat: flight.to.coordinates[1],
+  //       lng: flight.to.coordinates[0],
+  //       altitude: 40,
+  //     },
+  //     flight,
+  //   })
+  // }
+})
 </script>
 
 <template>

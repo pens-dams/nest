@@ -7,6 +7,7 @@
     },
     "devDependencies": {
         "@googlemaps/js-api-loader": "^1.15.1",
+        "@googlemaps/three": "^4.0.1",
         "@heroicons/vue": "^2.0.17",
         "@inertiajs/vue3": "^1.0.6",
         "@tailwindcss/forms": "^0.5.3",
