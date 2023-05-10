@@ -40,12 +40,6 @@ class DroneDrawer extends Drawer<Drone> {
     object.position.z = drone.current.altitude
   }
 
-  async addDrone(drone: Drone): Promise<void> {
-    await this.isReady()
-
-    this.data.push(drone)
-  }
-
   startAnimation(): void {
     for (const drone of this.data) {
       this.animateDrone(drone)

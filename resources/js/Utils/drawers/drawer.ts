@@ -56,6 +56,12 @@ abstract class Drawer<T extends Drawable> {
     return this._overlay
   }
 
+  async addData(data: T): Promise<void> {
+    await this.isReady()
+
+    this.data.push(data)
+  }
+
   protected async isReady(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       if (!this.readyCondition()) {

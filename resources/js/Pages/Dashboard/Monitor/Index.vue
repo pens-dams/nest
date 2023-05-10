@@ -7,6 +7,7 @@ import type { Flight } from '@/Types/laravel'
 import { Drone } from '@/Types/local'
 import LatLngAltitudeLiteral = google.maps.LatLngAltitudeLiteral
 import DroneDrawer from '@/Utils/drawers/drone-drawer'
+import LineDrawer from '@/Utils/drawers/line-drawer'
 
 const mapElement = ref()
 
@@ -50,47 +51,34 @@ onMounted(async () => {
     lng: drones[0].origin.lng,
   })
 
-  for (const flight of props.flights) {
-    googleMap.addPolyline([
-      {
-        lat: flight.from.coordinates[1],
-        lng: flight.from.coordinates[0],
-      },
-      {
-        lat: flight.to.coordinates[1],
-        lng: flight.to.coordinates[0],
-      },
-    ])
-  }
-
   const droneDrawer =
     googleMap.threeRenderer.getDrawer<DroneDrawer>(DroneDrawer)
 
   for await (const drone of drones) {
-    await droneDrawer.addDrone(drone)
+    await droneDrawer.addData(drone)
   }
 
   droneDrawer.startAnimation()
 
-  // const lineDrawer = await googleMap.threeRenderer.getDrawer<LineDrawer>(
-  //   LineDrawer
-  // )
-  //
-  // for (const flight of props.flights) {
-  //   lineDrawer.addLine({
-  //     origin: {
-  //       lat: flight.from.coordinates[1],
-  //       lng: flight.from.coordinates[0],
-  //       altitude: 40,
-  //     },
-  //     destination: {
-  //       lat: flight.to.coordinates[1],
-  //       lng: flight.to.coordinates[0],
-  //       altitude: 40,
-  //     },
-  //     flight,
-  //   })
-  // }
+  const lineDrawer = await googleMap.threeRenderer.getDrawer<LineDrawer>(
+    LineDrawer
+  )
+
+  for await (const flight of props.flights) {
+    await lineDrawer.addData({
+      origin: {
+        lat: flight.from.coordinates[1],
+        lng: flight.from.coordinates[0],
+        altitude: 40,
+      },
+      destination: {
+        lat: flight.to.coordinates[1],
+        lng: flight.to.coordinates[0],
+        altitude: 40,
+      },
+      flight,
+    })
+  }
 })
 </script>
 

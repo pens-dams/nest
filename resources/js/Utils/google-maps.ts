@@ -20,10 +20,6 @@ class GoogleMap {
   #map: google.maps.Map
   #threeRenderer: ThreeRenderer
 
-  get google() {
-    return google
-  }
-
   constructor(protected readonly mapElement: HTMLElement) {}
 
   public addPolyline(
