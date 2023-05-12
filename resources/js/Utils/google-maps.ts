@@ -76,7 +76,7 @@ class GoogleMap {
       tilt: 67,
       heading: 0,
       zoom: 18,
-      center: center ?? { lat: -7.250445, lng: 112.768845 },
+      center: center ?? { lat: -7.275884, lng: 112.794072 },
       mapId: '42d59f7789a288e6',
     })
 

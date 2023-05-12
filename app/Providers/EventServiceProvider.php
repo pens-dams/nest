@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Events\Flight\FlightCreated;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Listeners\Flight\FlightCreated as FlightCreatedListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -17,6 +19,10 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
+        ],
+        FlightCreated::class => [
+            FlightCreatedListener\SuggestEmptyFields::class,
+            FlightCreatedListener\CreateFlightLog::class,
         ],
     ];
 

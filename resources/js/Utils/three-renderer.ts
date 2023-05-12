@@ -1,7 +1,8 @@
 import Drawer from '@/Utils/drawers/drawer'
 import DroneDrawer from '@/Utils/drawers/drone-drawer'
 import LineDrawer from '@/Utils/drawers/line-drawer'
-import { ThreeJSOverlayView } from '@googlemaps/three'
+import { ThreeJSOverlayView, WORLD_SIZE } from '@googlemaps/three'
+import { AxesHelper } from 'three'
 
 class ThreeRenderer {
   protected drawers: Drawer<any>[] = []
@@ -17,7 +18,7 @@ class ThreeRenderer {
       drawer.overlay = this.overlay
     })
 
-    // this.overlay.scene.add(new AxesHelper(WORLD_SIZE))
+    this.overlay.scene.add(new AxesHelper(WORLD_SIZE))
   }
 
   getDrawer<T extends Drawer<any>>(type: new () => T): T {

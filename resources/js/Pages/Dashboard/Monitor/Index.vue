@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '../../../Layouts/AppLayout.vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed, ComputedRef } from 'vue'
 import type { PropType } from 'vue'
 import GoogleMap from '@/Utils/google-maps'
 import type { Flight } from '@/Types/laravel'
@@ -8,6 +8,7 @@ import { Drone } from '@/Types/local'
 import LatLngAltitudeLiteral = google.maps.LatLngAltitudeLiteral
 import DroneDrawer from '@/Utils/drawers/drone-drawer'
 import LineDrawer from '@/Utils/drawers/line-drawer'
+import { usePage } from '@inertiajs/vue3'
 
 const mapElement = ref()
 
@@ -17,6 +18,10 @@ const props = defineProps({
     required: true,
   },
 })
+
+const anchor: ComputedRef<{ lat: number; lng: number }> = computed(
+  () => usePage().props?.nest?.anchor
+)
 
 const drones = _.map(props.flights, (flight: Flight) => {
   const origin: LatLngAltitudeLiteral = {
@@ -47,8 +52,8 @@ onMounted(async () => {
 
   const googleMap = new GoogleMap(mapElement.value)
   await googleMap.initMap({
-    lat: drones[0].origin.lat,
-    lng: drones[0].origin.lng,
+    lat: anchor.value.lat,
+    lng: anchor.value.lng,
   })
 
   const droneDrawer =

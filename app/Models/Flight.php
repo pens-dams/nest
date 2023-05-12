@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Events\Flight\FlightCreated;
+use App\Models\Flight\Log;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Event;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Illuminate\Database\Eloquent\Relations;
 
@@ -44,5 +47,22 @@ class Flight extends Model
     public function drone(): Relations\BelongsTo
     {
         return $this->belongsTo(Drone::class);
+    }
+
+    /**
+     * @return Relations\HasMany<Log>
+     */
+    public function logs(): Relations\HasMany
+    {
+        return $this->hasMany(Flight\Log::class, 'flight_id');
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+//        self::created(function (Flight $flight) {
+//            Event::dispatch(new FlightCreated($flight));
+//        });
     }
 }

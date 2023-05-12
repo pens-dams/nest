@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Events\Flight\FlightCreated;
 use App\Models\Computer;
 use App\Models\Drone;
 use App\Models\Flight;
@@ -9,6 +10,7 @@ use App\Models\User;
 use Database\Factories\DroneFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Event;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class DatabaseSeeder extends Seeder
@@ -55,5 +57,9 @@ class DatabaseSeeder extends Seeder
                 ->create()
             )
             ->create();
+
+        foreach (Flight::query()->cursor() as $flight) {
+            Event::dispatch(new FlightCreated($flight));
+        }
     }
 }

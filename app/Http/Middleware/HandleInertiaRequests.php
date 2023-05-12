@@ -40,6 +40,9 @@ class HandleInertiaRequests extends Middleware
                     'location' => $request->url(),
                 ]);
             },
+            'nest' => function () {
+                return config('nest');
+            }
         ]);
     }
 }
