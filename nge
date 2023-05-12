@@ -4,9 +4,18 @@ set -o errexit    # Used to exit upon error, avoiding cascading errors
 
 IFS=$'\n\t'
 
-# read .env.docker file
-# shellcheck disable=SC1090
-source <(grep -v '^#' .env.docker | sed -E 's|^(.+)=(.*)$|: ${\1=\2}; export \1|g')
+RED="31"
+GREEN="32"
+YELLOW="33"
+BOLDGREEN="\e[1;${GREEN}m"
+ITALICRED="\e[3;${RED}m"
+BOLDYELLOW="\e[1;${YELLOW}m"
+NC="\e[0m"
+
+# read .env file
+set -o allexport
+source .env set
+set +o allexport
 
 # usage: file_env VAR [DEFAULT]
 #    ie: file_env 'XYZ_DB_PASSWORD' 'example'
@@ -34,65 +43,96 @@ install() {
 	echo "installing in 5 seconds"
 	sleep 5
 
-    printf "\n\n${YELLOW}[octane]${NC} installing package...\n"
+    echo "pgid : ${DOCKER_PGID}, puid : ${DOCKER_PUID}, user : ${DOCKER_USER}"
+    printf "\n\n${YELLOW}[core]${NC} installing package...\n"
     composer install
-    printf "\n\n${YELLOW}[octane]${NC} put application under maintenance...\n"
+    printf "\n\n${YELLOW}[core]${NC} run post installation script...\n"
+    composer run post-root-package-install
+    printf "\n\n${YELLOW}[core]${NC} put application under maintenance...\n"
     if [[ -z "$APP_KEY" ]]; then
         artisan key:generate
     fi
     artisan down
-    printf "\n\n${YELLOW}[octane]${NC} running database migration and seeders...\n"
-    artisan migrate --seed
-    printf "\n\n${YELLOW}[octane]${NC} upping application\n"
+    printf "\n\n${YELLOW}[core]${NC} running database migration and seeders...\n"
+    artisan migrate
+    printf "\n\n${YELLOW}[core]${NC} upping application\n"
     artisan up
-    artisan storage:link
 
     printf "\n\n${BLUE}[app]${NC} building node packages...\n"
-    npm ci
-    npm run production
+    pnpm install --frozen-lockfile
+    pnpm run build
 
+}
+
+compose() {
+    file_env 'APP_ENV' 'local'
+
+    if [[ "$APP_ENV" == "local" ]]; then
+        printf "${BOLDGREEN}→${NC} run docker compose on ${BOLDGREEN}local environment${NC}\n"
+        docker compose -f docker-compose.local.yml $@
+    else
+        printf "${BOLDYELLOW}→${NC} run docker compose on production ${BOLDYELLOW}environment${NC}\n"
+        docker compose $@
+    fi
 }
 
 composer() {
     file_env 'DOCKER_USER' 'dokar'
-    echo "run composer on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane composer $@
+    printf "${BOLDGREEN}→${NC} run composer on user : ${DOCKER_USER}\n"
+    compose run --rm --user=${DOCKER_USER} core composer $@
 }
 
 shell() {
     file_env 'DOCKER_USER' 'dokar'
-    echo "run shell on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane bash
+    printf "${BOLDGREEN}→${NC} run shell on user : ${DOCKER_USER}\n"
+    compose run --rm --user=${DOCKER_USER} core bash
 }
 
 artisan() {
     file_env 'DOCKER_USER' 'dokar'
-    echo "run artisan on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane php artisan --env=docker $@
+    printf "${BOLDGREEN}→${NC} run artisan on user : ${DOCKER_USER}\n"
+    compose run --rm --user=${DOCKER_USER} core php artisan $@
 }
 
-npm() {
+a() {
+  artisan $@
+}
+
+pnpm() {
     file_env 'DOCKER_USER' 'dokar'
-    echo "run npm on user : ${DOCKER_USER}"
-    docker compose --env-file=.env.docker run --rm --user="${DOCKER_USER}" octane npm $@
+    echo "${BOLDGREEN}→${NC} run pnpm on user : ${DOCKER_USER}\n"
+    compose run --rm --user=${DOCKER_USER} core pnpm $@
 }
 
 up() {
     echo "Nge up service $@..."
-    docker compose --env-file=.env.docker up -d $@
+    compose up -d $@
 }
 
 down() {
     echo "Nge down all service..."
-    docker compose --env-file=.env.docker down
+    compose down
 }
 
 check() {
-    docker compose --env-file=.env.docker ps
+    compose ps
 }
 
-compose() {
-    docker compose --env-file=.env.docker $@
+update() {
+    git pull
+    pnpm run build
+    compose restart core horizon scheduler gateway
+}
+
+reload() {
+    artisan down
+    compose restart core horizon scheduler gateway
+    artisan up
+    compose up -d
+}
+
+redis-cli() {
+  compose exec redis redis-cli
 }
 
 # Check if the function exists (bash specific)
@@ -105,4 +145,3 @@ else
   echo "'$1' is not a known function name" >&2
   exit 1
 fi
-

@@ -1,0 +1,146 @@
+version: "3.8"
+
+networks:
+    frontend:
+        driver: ${DOCKER_NETWORKS_DRIVER}
+    backend:
+        driver: ${DOCKER_NETWORKS_DRIVER}
+
+volumes:
+    db_mysql:
+        driver: ${DOCKER_VOLUMES_DRIVER}
+    cache_data:
+        driver: ${DOCKER_VOLUMES_DRIVER}
+
+x-executable: &executable
+    hostname: ${DOCKER_HOSTNAME:-nest-from-docker}
+    image: roisc/nest
+    restart: unless-stopped
+    depends_on:
+        core:
+            condition: service_healthy
+    networks:
+        - backend
+    environment:
+        - USER=${DOCKER_USER}
+        - PUID=${DOCKER_PUID}
+        - PGID=${DOCKER_PGID}
+    working_dir: /var/www
+    entrypoint: [ /entrypoint.d/entrypoint.sh ]
+    logging:
+        options:
+            max-size: "10m"
+            max-file: "3"
+
+services:
+    gateway:
+        image: nginx:latest
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www
+            - ./.docker/matter/gateway/nginx.conf:/etc/nginx/conf.d/default.conf
+        ports:
+            - ${DOCKER_PORT}:80
+        networks:
+            - frontend
+            - backend
+        logging:
+            options:
+                max-size: "10m"
+                max-file: "3"
+        depends_on:
+            core:
+                condition: service_healthy
+            fugo:
+                condition: service_started
+    core:
+        hostname: ${DOCKER_HOSTNAME:-nest-from-docker}
+        build:
+            context: .docker/image/local
+            args:
+                - USER_CONTAINER=${DOCKER_USER}
+                - PUID=${DOCKER_PUID}
+                - PGID=${DOCKER_PGID}
+        image: roisc/nest
+        logging:
+            options:
+                max-size: "10m"
+                max-file: "3"
+        restart: unless-stopped
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        volumes:
+            - ./:/var/www
+        environment:
+            DOCKER_ENV: ${APP_ENV}
+            PHP_IDE_CONFIG: serverName=core
+        networks:
+            - backend
+        working_dir: /var/www
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "http://localhost" ]
+            interval: 10s
+            timeout: 3s
+            retries: 10
+            start_period: 10s
+    db:
+        image: mysql:latest
+        volumes:
+            - db_mysql:/var/lib/mysql
+        restart: unless-stopped
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+        networks:
+            - backend
+        ports:
+          - "3306"
+        healthcheck:
+            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            timeout: 20s
+            retries: 10
+    redis:
+        image: redis
+        restart: unless-stopped
+        volumes:
+            - cache_data:/data
+        networks:
+            - backend
+        healthcheck:
+            test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+            interval: 10s
+            timeout: 3s
+            retries: 10
+            start_period: 10s
+    horizon:
+        <<: *executable
+        volumes:
+            - ./:/var/www
+            - ./.docker/matter/horizon/:/entrypoint.d
+    scheduler:
+        <<: *executable
+        volumes:
+            - ./:/var/www
+            - ./.docker/matter/scheduler/:/entrypoint.d
+    fugo:
+        image: centrifugo/centrifugo:latest
+        restart: unless-stopped
+        volumes:
+            - ./storage/app/centrifugo:/centrifugo
+        working_dir: /centrifugo
+        command: >
+            sh -c "[ -f config.json ] && centrifugo -c config.json --admin || centrifugo genconfig config.json && centrifugo -c config.json --admin"
+        networks:
+            - backend
+        ulimits:
+            nofile:
+                soft: 65535
+                hard: 65535
