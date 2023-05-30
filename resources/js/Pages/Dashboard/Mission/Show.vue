@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { onMounted, PropType, reactive, ref, toRefs, watch } from 'vue'
-import { Drone as DroneModel } from '@/Types/laravel'
+import {
+  computed,
+  onMounted,
+  PropType,
+  reactive,
+  ref,
+  toRefs,
+  watch,
+} from 'vue'
+import { Drone as DroneModel, Flight } from '@/Types/laravel'
 import GoogleMap from '@/Utils/google-maps'
 import DroneDrawer from '@/Utils/drawers/drone-drawer'
 import { ReactiveVariable } from 'vue/macros'
@@ -9,19 +17,25 @@ import { Drone, Line, Point } from '@/Types/local'
 import LineDrawer from '@/Utils/drawers/line-drawer'
 import _ from 'lodash'
 import * as THREE from 'three'
+import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { router } from '@inertiajs/vue3'
+import route from 'ziggy-js'
 
 const props = defineProps({
   drone: Object as PropType<DroneModel>,
+  flights: Array as PropType<Flight[]>,
 })
 
 const randomColor = _.sample(THREE.Color.NAMES)
 
 const isFormCreateActive = ref(false)
+const isLookingForPoint = ref(false)
 
 const { drone } = toRefs(props)
 
 const mapElement = ref()
 
+const departureTime = ref()
 const points: ReactiveVariable<Point[]> = reactive([])
 
 points.push(
@@ -31,6 +45,38 @@ points.push(
     altitude: 10,
   })
 )
+
+const canSaveFlight = computed(() => {
+  return points.length > 1
+})
+
+const saveFlight = () => {
+  if (!canSaveFlight.value) {
+    return
+  }
+
+  const departure = new Date(departureTime.value)
+
+  router.post(
+    route('dashboard.mission.store', { drone: drone.value.id }),
+    {
+      departure: departure.toISOString(),
+      points: points.map((point) => {
+        return {
+          lat: point.position.lat,
+          lng: point.position.lng,
+          alt: point.position.altitude,
+        }
+      }),
+    },
+    {
+      onSuccess: () => {
+        isFormCreateActive.value = false
+        points.splice(1, points.length - 1)
+      },
+    }
+  )
+}
 
 onMounted(async () => {
   const googleMap = new GoogleMap(mapElement.value)
@@ -69,6 +115,10 @@ onMounted(async () => {
   googleMap.threeRenderer.start()
 
   googleMap.map.addListener('click', (e) => {
+    if (!isLookingForPoint.value || !isFormCreateActive.value) {
+      return
+    }
+
     const point = e.latLng.toJSON()
 
     points.push(
@@ -91,7 +141,11 @@ onMounted(async () => {
     </template>
 
     <div class="flex">
-      <div class="flex-row pb-12 w-3/4" id="mapContainer">
+      <div
+        class="flex-row pb-12 w-3/4"
+        id="mapContainer"
+        :class="{ cursorPointer: isLookingForPoint }"
+      >
         <div ref="mapElement" />
       </div>
       <div class="h-75 w-1/4 p-4">
@@ -114,16 +168,35 @@ onMounted(async () => {
           </div>
         </div>
         <div
+          v-if="isFormCreateActive"
           class="border-b mt-5 border-gray-200 bg-white px-4 py-5 sm:px-6 w-full"
         >
-          <div
-            class="-ml-4 -mt-2 flex flex-wrap items-center justify-between sm:flex-nowrap"
-          >
-            <div class="ml-4 mt-2 w-full">
+          <div class="-ml-4 -mt-2 flex flex-wrap items-center justify-between">
+            <div class="pl-4 mt-2 w-1/2">
               <h3 class="text-lg font-medium leading-6 text-gray-900">
                 Points
               </h3>
+            </div>
+            <div class="mt-2 text-right">
+              <a href="#" @click="isFormCreateActive = false">
+                <XMarkIcon class="w-5" />
+              </a>
+            </div>
+            <div class="ml-4 mt-2 w-full">
               <div class="mt-1 max-w-2xl text-sm text-gray-500 w-full">
+                <div class="mt-2 flex rounded-md shadow-sm">
+                  <span
+                    class="inline-flex w-1/4 items-center rounded-l-md border border-r-0 border-gray-300 px-3 text-gray-500 sm:text-sm"
+                    >Departure</span
+                  >
+                  <input
+                    v-model="departureTime"
+                    type="datetime-local"
+                    name="company-website"
+                    id="company-website"
+                    class="block w-full min-w-0 flex-1 rounded-none rounded-r-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
                 <div
                   class="border-amber-500 p-3 rounded-md border-2 mt-2"
                   v-for="(point, index) in points"
@@ -173,13 +246,44 @@ onMounted(async () => {
                 </div>
                 <button
                   type="button"
-                  class="mt-2 relative inline-flex items-center rounded-md border border-transparent bg-amber-600 px-1 py-1 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  class="mt-2 relative inline-flex items-center rounded-md border border-transparent bg-amber-600 px-1 py-1 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                   @click="points.pop()"
                 >
                   Remove Last Point
                 </button>
+                <button
+                  type="button"
+                  class="mt-2 ml-3 relative inline-flex items-center rounded-md border border-transparent border-blue-400 px-1 py-1 text-sm font-medium text-emerald-950 shadow-sm hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  :class="{
+                    'bg-blue-700 text-white': isLookingForPoint,
+                    'text-emerald-950': !isLookingForPoint,
+                  }"
+                  @click="isLookingForPoint = !isLookingForPoint"
+                >
+                  Add Point
+                </button>
+                <button
+                  v-if="canSaveFlight"
+                  type="button"
+                  class="mt-2 ml-3 relative inline-flex items-center rounded-md border border-transparent border-green-400 px-1 py-1 text-sm font-medium text-green-950 shadow-sm hover:bg-green-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  @click="saveFlight"
+                >
+                  Save
+                </button>
               </div>
             </div>
+          </div>
+        </div>
+        <div
+          v-else
+          class="border-b mt-5 border-gray-200 bg-white px-4 py-5 sm:px-6 w-full"
+        >
+          <div class="-ml-4 -mt-2 flex flex-wrap items-center justify-between">
+            <a href="#" v-for="flight in flights">
+              <div class="border-amber-500 p-3 rounded-md border-2 mt-2">
+                #{{ flight.code }}
+              </div>
+            </a>
           </div>
         </div>
       </div>

@@ -2,13 +2,11 @@
 
 namespace App\Models;
 
-use App\Events\Flight\FlightCreated;
 use App\Models\Flight\Log;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Event;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Illuminate\Database\Eloquent\Relations;
 
@@ -19,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations;
  * @property  Point  $from
  * @property  Point  $to
  * @property  int  $planned_altitude
- * @property  \App\Models\Drone  $drone
+ * @property  Drone $drone
  * @property  int  $drone_id
  * @property  Carbon $departure
  * @property  int  $speed
@@ -53,6 +51,14 @@ class Flight extends Model
     public function drone(): Relations\BelongsTo
     {
         return $this->belongsTo(Drone::class);
+    }
+
+    /**
+     * @return Relations\HasMany<Flight\Path>
+     */
+    public function paths(): Relations\HasMany
+    {
+        return $this->hasMany(Flight\Path::class, 'flight_id')->orderBy('sequence');
     }
 
     /**

@@ -6,4 +6,9 @@ declare global {
     tuiNotification: object | null
     Ziggy?: object
   }
+
+  interface FlashMessage {
+    success: string | null
+    warning: string | null
+  }
 }

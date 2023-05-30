@@ -41,6 +41,7 @@ class Log extends Model
     protected $casts = [
         'position' => Point::class,
         'meta' => 'array',
+        'altitude' => 'float',
         'datetime' => 'datetime',
     ];
 
