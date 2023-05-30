@@ -2,6 +2,8 @@ import { Loader } from '@googlemaps/js-api-loader'
 import _ from 'lodash'
 import ThreeRenderer from '@/Utils/three-renderer'
 import { ThreeJSOverlayView } from '@googlemaps/three'
+import { computed, ComputedRef } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 
 const apiOptions = {
   apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -11,6 +13,10 @@ const apiOptions = {
 let google
 
 class GoogleMap {
+  get map(): google.maps.Map {
+    return this.#map
+  }
+
   private overlay: ThreeJSOverlayView
 
   get threeRenderer(): ThreeRenderer {
@@ -65,6 +71,18 @@ class GoogleMap {
   }
 
   public async initMap(center?: google.maps.LatLngLiteral) {
+    if (!center) {
+      const anchor: ComputedRef<{ lat: number; lng: number }> = computed(
+        // @ts-ignore
+        () => usePage().props?.nest?.anchor
+      )
+
+      center = {
+        lat: anchor.value.lat,
+        lng: anchor.value.lng,
+      }
+    }
+
     const apiLoader = new Loader(apiOptions)
 
     google = await apiLoader.load()

@@ -47,6 +47,10 @@ class DroneDrawer extends Drawer<Drone> {
   }
 
   protected animateDrone(drone: Drone): void {
+    if (drone.destination == null) {
+      return
+    }
+
     if (
       drone.current.lat == drone.destination.lat &&
       drone.current.lng == drone.destination.lng

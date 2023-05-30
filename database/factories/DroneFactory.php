@@ -56,6 +56,7 @@ class DroneFactory extends Factory
     {
         /** @var array{lat: float, lng: float} $location */
         $location = $this->faker->randomElement(self::$knownLocations);
+        $point = new Point($location['lat'], $location['lng']);
 
         return [
             'name' => $this->faker->lastName() . '\'s drone.',
@@ -65,7 +66,8 @@ class DroneFactory extends Factory
                 '/storage/build/drone-mini.jpg',
                 '/storage/build/quadcopter.jpg',
             ]),
-            'standby_location' => new Point($location['lat'], $location['lng']),
+            'standby_location' => $point,
+            'meta' => $point->toArray(),
         ];
     }
 }

@@ -1,13 +1,17 @@
 import * as THREE from 'three'
-import { ThreeJSOverlayView } from '@googlemaps/three'
-import { reactive, watch } from 'vue'
-import { forEach } from 'lodash'
 import { Object3D } from 'three'
-import _ from 'lodash'
+import { ThreeJSOverlayView } from '@googlemaps/three'
+import { reactive, toRaw, watch } from 'vue'
+import _, { forEach } from 'lodash'
+import { ReactiveVariable } from 'vue/macros'
 
-export interface Drawable {}
+export interface Drawable {
+  id: string
+}
 
 export class Object3DWrapper {
+  isInScene: boolean = false
+
   constructor(public object: THREE.Object3D, public drawable: Drawable) {}
 }
 
@@ -19,13 +23,15 @@ abstract class Drawer<T extends Drawable> {
   protected _overlay: ThreeJSOverlayView
   protected scene: THREE.Scene
 
-  protected objects: Object3DWrapper[] = []
-
-  protected data: T[] = reactive([])
+  protected objects: Object3DWrapper[]
+  protected data: ReactiveVariable<T[]>
 
   private _drawing: boolean = false
 
   protected constructor() {
+    this.data = reactive([])
+    this.objects = []
+
     watch(this.data, async () => {
       if (!this.readyCondition()) {
         return
@@ -48,6 +54,15 @@ abstract class Drawer<T extends Drawable> {
     await this.isReady()
 
     this.data.push(data)
+  }
+
+  async clear(): Promise<void> {
+    forEach(this.objects, (object) => {
+      this.scene.remove(object.object)
+    })
+
+    this.data.splice(0, this.data.length)
+    this.objects = []
   }
 
   protected async isReady(): Promise<boolean> {
@@ -92,24 +107,32 @@ abstract class Drawer<T extends Drawable> {
     }
 
     return _.debounce(() => {
-      forEach(this.data, async (drawable: Drawable) => {
+      const dataNonObjects = this.data.filter(
+        (d) => !this.objects.find((o) => o.drawable.id == d.id)
+      )
+      for (const drawable of dataNonObjects) {
+        const drawableRaw = toRaw(drawable)
+
         let objectWrapper: Object3DWrapper | undefined = this.objects.find(
-          (o) => o.drawable == drawable
+          (o) => {
+            return o.drawable.id == drawableRaw.id
+          }
         )
 
         if (typeof objectWrapper == 'undefined') {
           objectWrapper = new Object3DWrapper(
-            this.createObject(drawable),
-            drawable
+            this.createObject(drawableRaw),
+            drawableRaw
           )
 
           this.scene.add(objectWrapper.object)
-
           this.objects.push(objectWrapper)
+
+          objectWrapper.isInScene = true
         }
 
-        this.objectMapping(drawable, objectWrapper.object)
-      })
+        this.objectMapping(drawableRaw, objectWrapper.object)
+      }
 
       this._overlay.requestRedraw()
     }, 100)

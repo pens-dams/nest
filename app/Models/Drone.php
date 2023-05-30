@@ -25,6 +25,7 @@ class Drone extends Model
 
     protected $casts = [
         'standby_location' => Point::class,
+        'meta' => 'array',
     ];
 
     /**

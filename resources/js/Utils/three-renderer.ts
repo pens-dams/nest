@@ -33,6 +33,12 @@ class ThreeRenderer {
     return drawer as T
   }
 
+  clear(): void {
+    this.drawers.forEach((drawer) => {
+      drawer.clear().then((r) => r)
+    })
+  }
+
   start(): void {
     this.drawers.forEach((drawer) => {
       drawer.drawing = true

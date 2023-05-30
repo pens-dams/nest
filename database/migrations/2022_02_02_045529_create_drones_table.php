@@ -23,6 +23,8 @@ return new class extends Migration
 
             $table->point('standby_location')->nullable();
 
+            $table->jsonb('meta')->nullable();
+
             $table->timestamps();
         });
     }

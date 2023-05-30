@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import AppLayout from '../../../Layouts/AppLayout.vue'
-import { onMounted, ref, computed, ComputedRef } from 'vue'
+import AppLayout from '@/Layouts/AppLayout.vue'
 import type { PropType } from 'vue'
+import { onMounted, ref } from 'vue'
 import GoogleMap from '@/Utils/google-maps'
 import type { Flight, Intersect } from '@/Types/laravel'
-import { Drone } from '@/Types/local'
-import LatLngAltitudeLiteral = google.maps.LatLngAltitudeLiteral
+import { Drone, Line, Point } from '@/Types/local'
 import DroneDrawer from '@/Utils/drawers/drone-drawer'
 import LineDrawer from '@/Utils/drawers/line-drawer'
-import { usePage } from '@inertiajs/vue3'
 import DotDrawer from '@/Utils/drawers/dot-drawer'
+import LatLngAltitudeLiteral = google.maps.LatLngAltitudeLiteral
 
 const mapElement = ref()
 
@@ -23,10 +22,6 @@ const props = defineProps({
     required: true,
   },
 })
-
-const anchor: ComputedRef<{ lat: number; lng: number }> = computed(
-  () => usePage().props?.nest?.anchor
-)
 
 const drones = _.map(props.flights, (flight: Flight) => {
   const origin: LatLngAltitudeLiteral = {
@@ -47,7 +42,7 @@ const drones = _.map(props.flights, (flight: Flight) => {
     altitude: flight.planned_altitude,
   }
 
-  return new Drone(origin, destination, flight.drone, current, flight.speed)
+  return new Drone(flight.drone, current, origin, destination, flight.speed)
 })
 
 onMounted(async () => {
@@ -56,10 +51,7 @@ onMounted(async () => {
   }
 
   const googleMap = new GoogleMap(mapElement.value)
-  await googleMap.initMap({
-    lat: anchor.value.lat,
-    lng: anchor.value.lng,
-  })
+  await googleMap.initMap()
 
   const droneDrawer =
     googleMap.threeRenderer.getDrawer<DroneDrawer>(DroneDrawer)
@@ -73,31 +65,35 @@ onMounted(async () => {
     LineDrawer
   )
   for (const flight of props.flights) {
-    await lineDrawer.addData({
-      origin: {
-        lat: flight.from.coordinates[1],
-        lng: flight.from.coordinates[0],
-        altitude: flight.planned_altitude ?? 40,
-      },
-      destination: {
-        lat: flight.to.coordinates[1],
-        lng: flight.to.coordinates[0],
-        altitude: flight.planned_altitude ?? 40,
-      },
-      flight,
-    })
+    await lineDrawer.addData(
+      new Line(
+        {
+          lat: flight.from.coordinates[1],
+          lng: flight.from.coordinates[0],
+          altitude: flight.planned_altitude ?? 40,
+        },
+        {
+          lat: flight.to.coordinates[1],
+          lng: flight.to.coordinates[0],
+          altitude: flight.planned_altitude ?? 40,
+        },
+        flight
+      )
+    )
 
     let i = 1
     for (const log of flight.logs) {
       setTimeout(async () => {
-        await dotDrawer.addData({
-          position: {
-            lat: log.position.coordinates[1],
-            lng: log.position.coordinates[0],
-            altitude: log.altitude,
-          },
-          radius: 2,
-        })
+        await dotDrawer.addData(
+          new Point(
+            {
+              lat: log.position.coordinates[1],
+              lng: log.position.coordinates[0],
+              altitude: log.altitude,
+            },
+            2
+          )
+        )
       }, 1000 * i++)
     }
   }
@@ -106,22 +102,14 @@ onMounted(async () => {
     DotDrawer
   )
 
-  console.log(props.intersections)
-
   for (const intersect of props.intersections) {
-    const data = {
-      position: null,
-      radius: intersect.radius,
-      color: 0xff0000,
-      coordinate: {
-        x: _.get(intersect.meta, 'collision.middlePoint.x'),
-        y: _.get(intersect.meta, 'collision.middlePoint.y'),
-        z: _.get(intersect.meta, 'collision.middlePoint.z'),
-      },
-    }
+    const data = new Point(null, intersect.radius, 0xff0000, {
+      x: _.get(intersect.meta, 'collision.middlePoint.x'),
+      y: _.get(intersect.meta, 'collision.middlePoint.y'),
+      z: _.get(intersect.meta, 'collision.middlePoint.z'),
+    })
 
     await dotDrawer.addData(data)
-    console.log(data.coordinate)
   }
 
   googleMap.threeRenderer.start()
