@@ -11,7 +11,19 @@ interface Drone {
   serial_number: string
 }
 
+interface Log {
+  ulid: string
+  position: Point
+  altitude: number
+  speed: number
+  datetime: string
+  meta: object
+}
+
 interface Flight {
+  speed: number
+  logs: Log[]
+  planned_altitude: number
   altitude: number | null
   to: Point
   code: string
@@ -21,4 +33,13 @@ interface Flight {
   departure: string
 }
 
-export type { Flight, Point, Drone }
+interface Intersect {
+  ulid: string
+  intersect: Point
+  altitude: number
+  radius: number
+  collision_time: string
+  meta: object
+}
+
+export type { Flight, Point, Drone, Log, Intersect }

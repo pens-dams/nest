@@ -14,11 +14,15 @@ class MonitorController extends Controller
     public function index(): Response
     {
         $flights = Flight::query()
-            ->with('drone')
+            ->with('drone', 'logs')
+            ->get();
+
+        $intersections = Flight\Intersect::query()
             ->get();
 
         return Inertia::render('Dashboard/Monitor/Index', [
             'flights' => $flights,
+            'intersections' => $intersections,
         ]);
     }
 }

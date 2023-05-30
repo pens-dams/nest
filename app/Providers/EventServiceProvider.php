@@ -3,9 +3,12 @@
 namespace App\Providers;
 
 use App\Events\Flight\FlightCreated;
+use App\Events\Flight\Log\LogSeriesCreated;
+use App\Jobs\Flight\CalculateFlightCollision;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use App\Listeners\Flight\FlightCreated as FlightCreatedListener;
 
@@ -33,7 +36,12 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Event::listen(LogSeriesCreated::class, function (LogSeriesCreated $event) {
+//            Bus::dispatch(new CalculateFlightCollision($event->flight));
+            Bus::batch([new CalculateFlightCollision($event->flight)])
+                ->name('Calculate flight collision for flight: ' . $event->flight->ulid)
+                ->dispatch();
+        });
     }
 
     /**
@@ -41,7 +49,7 @@ class EventServiceProvider extends ServiceProvider
      *
      * @return bool
      */
-    public function shouldDiscoverEvents()
+    public function shouldDiscoverEvents(): bool
     {
         return false;
     }

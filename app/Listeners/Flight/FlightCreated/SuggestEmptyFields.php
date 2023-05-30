@@ -18,6 +18,7 @@ class SuggestEmptyFields
 
     /**
      * Handle the event.
+     * @throws \Exception
      */
     public function handle(FlightCreated $event): void
     {
@@ -28,7 +29,7 @@ class SuggestEmptyFields
         }
 
         if ($flight->planned_altitude === null) {
-            $flight->planned_altitude = 50;
+            $flight->planned_altitude = random_int(50, 60);
         }
 
         $flight->save();

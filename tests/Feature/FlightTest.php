@@ -2,17 +2,25 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\Flight\CalculateAllCollision;
+use Database\Seeders\FlightTestSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 class FlightTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     */
-    public function test_flight_created_trigger_calculation(): void
+    use RefreshDatabase;
+
+    public function test_euclidean_distance_calculation(): void
     {
+//        $this->seed(FlightTestSeeder::class);
+
+        $batch = Bus::batch([
+            new CalculateAllCollision(),
+        ])->dispatch();
+
         $this->assertTrue(true);
+        $this->assertDatabaseCount('flight_intersects', 3);
     }
 }

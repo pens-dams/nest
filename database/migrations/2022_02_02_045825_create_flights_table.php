@@ -9,9 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('flights', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('drone_id')->constrained()->references('id')->on('drones');
+            $table->ulid()->primary();
+
+            $table->foreignId('drone_id')
+                ->constrained()
+                ->references('id')
+                ->on('drones');
+
             $table->string('code');
+
+            $table->integer('sequence')->default(1);
+
             $table->dateTime('departure');
 
             $table->point('from');

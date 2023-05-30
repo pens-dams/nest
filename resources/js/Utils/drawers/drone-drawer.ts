@@ -1,8 +1,8 @@
 import Drawer, { Drawable } from '@/Utils/drawers/drawer'
 import * as THREE from 'three'
+import { Object3D } from 'three'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Drone } from '@/Types/local'
-import { Object3D } from 'three'
 
 class DroneDrawer extends Drawer<Drone> {
   private gltf: GLTF
@@ -59,8 +59,8 @@ class DroneDrawer extends Drawer<Drone> {
       new google.maps.LatLng(drone.destination.lat, drone.destination.lng)
     )
 
-    const speed = 10 // km/h
-    const time = (distance / speed) * 1000 // ms
+    // km/h
+    const time = (distance / drone.speed) * 1000 // ms
 
     const start = Date.now()
 

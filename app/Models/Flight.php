@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Flight\FlightCreated;
 use App\Models\Flight\Log;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
@@ -20,19 +21,24 @@ use Illuminate\Database\Eloquent\Relations;
  * @property  int  $planned_altitude
  * @property  \App\Models\Drone  $drone
  * @property  int  $drone_id
- * @property  int  $id
  * @property  Carbon $departure
  * @property  int  $speed
  * @property  string  $name
  * @property  array  $meta
  * @property  \Illuminate\Support\Carbon  $created_at
  * @property  \Illuminate\Support\Carbon  $updated_at
+ * @property string $ulid
  */
 class Flight extends Model
 {
     use HasFactory;
+    use HasUlids;
 
     protected $table = 'flights';
+
+    protected $primaryKey = 'ulid';
+
+    protected $keyType = 'string';
 
     protected $casts = [
         'from' => Point::class,
@@ -60,9 +66,5 @@ class Flight extends Model
     protected static function boot(): void
     {
         parent::boot();
-
-//        self::created(function (Flight $flight) {
-//            Event::dispatch(new FlightCreated($flight));
-//        });
     }
 }

@@ -56,11 +56,6 @@ class CalculateLog implements ShouldQueue
                 'lng' => $currentLng,
                 'alt' => $this->flight->planned_altitude,
             ],
-            referencePoint: [
-                'lat' => config('nest.anchor.lat'),
-                'lng' => config('nest.anchor.lng'),
-                'alt' => config('nest.anchor.alt'),
-            ],
         );
 
         $this->flight->logs()->create([
@@ -69,10 +64,24 @@ class CalculateLog implements ShouldQueue
             'altitude' => $this->flight->planned_altitude,
             'datetime' => $this->flight->departure->clone()->addSeconds((int)$this->second),
             'meta' => [
+                'lla' => [
+                    'lat' => $currentLat,
+                    'lng' => $currentLng,
+                ],
                 'progress' => $progress,
                 'coordinate' => $coordinate,
                 'anchor' => config('nest.anchor'),
             ],
         ]);
+    }
+
+    /**
+     * Get the tags that should be assigned to the job.
+     *
+     * @return array<int, string>
+     */
+    public function tags(): array
+    {
+        return ['flight-log', 'flight:'.$this->flight->ulid];
     }
 }

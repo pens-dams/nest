@@ -3,11 +3,13 @@
 namespace App\Listeners\Flight\FlightCreated;
 
 use App\Events\Flight\FlightCreated;
+use App\Events\Flight\Log\LogSeriesCreated;
 use App\Jobs\Flight\Log\CalculateLog;
 use App\Supports\Geo;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Event;
 
 class CreateFlightLog implements ShouldQueue
 {
@@ -23,6 +25,7 @@ class CreateFlightLog implements ShouldQueue
 
     /**
      * Handle the event.
+     * @throws \Throwable
      */
     public function handle(FlightCreated $event): void
     {
@@ -57,11 +60,15 @@ class CreateFlightLog implements ShouldQueue
 
         $flight->save();
 
-        $batch = Bus::batch([])->name('Create flight log');
+        $batch = Bus::batch([])->name('Create flight log: ' . $flight->ulid);
 
         foreach (range(0, $time) as $second) {
             $batch->add(new CalculateLog($flight, $second, $time));
         }
+
+        $batch->then(function () use ($flight) {
+            Event::dispatch(new LogSeriesCreated($flight));
+        });
 
         $batch->dispatch();
     }

@@ -11,11 +11,11 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('flight_logs', function (Blueprint $table) {
-            $table->ulid();
+            $table->ulid()->primary();
 
-            $table->foreignId('flight_id')
+            $table->foreignUlid('flight_id')
                 ->constrained()
-                ->references('id')
+                ->references('ulid')
                 ->on('flights')
                 ->cascadeOnDelete();
 

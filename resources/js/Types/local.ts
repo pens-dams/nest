@@ -6,7 +6,8 @@ class Drone implements Drawable {
     public readonly origin: google.maps.LatLngAltitudeLiteral,
     public readonly destination: google.maps.LatLngAltitudeLiteral,
     public readonly drone: DroneModel,
-    public current: google.maps.LatLngAltitudeLiteral
+    public current: google.maps.LatLngAltitudeLiteral,
+    public speed: number = 10
   ) {}
 }
 
@@ -19,4 +20,17 @@ class Line implements Drawable {
   ) {}
 }
 
-export { Drone, Line }
+class Point implements Drawable {
+  constructor(
+    public readonly position: google.maps.LatLngAltitudeLiteral | null = null,
+    public readonly radius: number = 0,
+    public readonly color?: number,
+    public readonly coordinate?: {
+      x: number
+      y: number
+      z: number
+    }
+  ) {}
+}
+
+export { Drone, Line, Point }

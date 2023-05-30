@@ -9,6 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
+/**
+ * @property Point $position
+ * @property float $altitude
+ * @property float $speed
+ * @property \DateTimeInterface $datetime
+ * @property array $meta
+ * @property string $ulid
+ * @property string $flight_id
+ */
 class Log extends Model
 {
     use HasFactory;
@@ -17,6 +26,8 @@ class Log extends Model
     protected $table = 'flight_logs';
 
     protected $primaryKey = 'ulid';
+
+    protected $keyType = 'string';
 
     protected $fillable = [
         'flight_id',
