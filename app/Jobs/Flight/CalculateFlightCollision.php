@@ -70,7 +70,7 @@ class CalculateFlightCollision implements ShouldQueue
 
         foreach ($comparableCoordinates as $comparableCoordinate) {
             foreach ($coordinates as $log) {
-                if (($distance = $log->getDistance($comparableCoordinate)) < Coordinate::$collisionThreshold) {
+                if (($distance = $log->getEuclideanDistance($comparableCoordinate)) < Coordinate::$collisionThreshold) {
                     $collision = new Collision([$log, $comparableCoordinate], $distance);
                     $this->storeCollision($collision);
                 }

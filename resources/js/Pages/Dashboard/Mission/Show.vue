@@ -23,6 +23,7 @@ import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { router } from '@inertiajs/vue3'
 import route from 'ziggy-js'
 import addMinutes from 'date-fns/addMinutes'
+import DotDrawer from '@/Utils/drawers/dot-drawer'
 
 const props = defineProps({
   drone: Object as PropType<DroneModel>,
@@ -49,34 +50,6 @@ const mapElement = ref()
 
 const departureTime = ref()
 const points: ReactiveVariable<Point[]> = reactive([])
-
-watch(selectedFlightUlid, (newValue) => {
-  if (newValue === null) {
-    isFormEditActive.value = false
-    points.splice(0, points.length)
-    return
-  }
-
-  isFormEditActive.value = true
-  if (selectedFlight.value?.departure) {
-    let date = new Date(selectedFlight.value.departure)
-
-    date = addMinutes(date, date.getTimezoneOffset())
-
-    departureTime.value = date.toISOString().slice(0, 16)
-  }
-  points.splice(0, points.length)
-
-  for (const path of selectedFlight.value?.paths ?? []) {
-    points.push(
-      new Point({
-        lat: path.position.coordinates[1],
-        lng: path.position.coordinates[0],
-        altitude: path.altitude,
-      })
-    )
-  }
-})
 
 points.push(
   new Point({
@@ -132,6 +105,7 @@ onMounted(async () => {
   const droneDrawer =
     googleMap.threeRenderer.getDrawer<DroneDrawer>(DroneDrawer)
   const lineDrawer = googleMap.threeRenderer.getDrawer<LineDrawer>(LineDrawer)
+  const dotDrawer = googleMap.threeRenderer.getDrawer<DotDrawer>(DotDrawer)
 
   await droneDrawer.addData(
     new Drone(drone.value, {
@@ -140,6 +114,48 @@ onMounted(async () => {
       altitude: 10,
     })
   )
+
+  watch(selectedFlightUlid, (newValue) => {
+    if (newValue === null) {
+      isFormEditActive.value = false
+      points.splice(1, points.length)
+      return
+    }
+
+    isFormEditActive.value = true
+    if (selectedFlight.value?.departure) {
+      let date = new Date(selectedFlight.value.departure)
+
+      date = addMinutes(date, date.getTimezoneOffset())
+
+      departureTime.value = date.toISOString().slice(0, 16)
+    }
+    points.splice(0, points.length)
+
+    for (const path of selectedFlight.value?.paths ?? []) {
+      points.push(
+        new Point({
+          lat: path.position.coordinates[1],
+          lng: path.position.coordinates[0],
+          altitude: path.altitude,
+        })
+      )
+    }
+
+    dotDrawer.clear()
+    for (const log of selectedFlight.value.logs) {
+      dotDrawer.addData(
+        new Point(
+          {
+            lat: log.position.coordinates[1],
+            lng: log.position.coordinates[0],
+            altitude: log.altitude,
+          },
+          1.5
+        )
+      )
+    }
+  })
 
   watch(points, (newPoints) => {
     lineDrawer.clear()

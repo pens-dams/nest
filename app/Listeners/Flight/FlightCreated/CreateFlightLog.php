@@ -31,10 +31,15 @@ class CreateFlightLog implements ShouldQueue
     public function handle(FlightCreated $event): void
     {
         $flight = $event->flight;
+
+        $flight->logs()->delete();
+
         $batch = Bus::batch([])->name('Create flight log: ' . $flight->ulid);
 
         if ($flight->paths()->count() > 2) {
             $batch->add(new CreateLogFromFlightPath($flight));
+
+            $batch->dispatch();
 
             return;
         }

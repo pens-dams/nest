@@ -81,21 +81,21 @@ onMounted(async () => {
       )
     )
 
-    let i = 1
-    for (const log of flight.logs) {
-      setTimeout(async () => {
-        await dotDrawer.addData(
-          new Point(
-            {
-              lat: log.position.coordinates[1],
-              lng: log.position.coordinates[0],
-              altitude: log.altitude,
-            },
-            2
-          )
-        )
-      }, 1000 * i++)
-    }
+    // let i = 1
+    //   for (const log of flight.logs) {
+    //     setTimeout(async () => {
+    //       await dotDrawer.addData(
+    //         new Point(
+    //           {
+    //             lat: log.position.coordinates[1],
+    //             lng: log.position.coordinates[0],
+    //             altitude: log.altitude,
+    //           },
+    //           2
+    //         )
+    //       )
+    //     }, 1000 * i++)
+    //   }
   }
 
   const dotDrawer = await googleMap.threeRenderer.getDrawer<DotDrawer>(

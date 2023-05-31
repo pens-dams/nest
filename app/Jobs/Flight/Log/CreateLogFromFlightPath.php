@@ -33,7 +33,7 @@ class CreateLogFromFlightPath implements ShouldQueue
     {
         $this->fillMetaPathData();
 
-        $this->flight->refresh();
+        $this->flight = $this->flight->refresh();
 
         $paths = $this->flight->paths;
 
@@ -66,7 +66,7 @@ class CreateLogFromFlightPath implements ShouldQueue
                 continue;
             }
 
-            $time = $destination->meta['time']['value'] - $origin->meta['time']['value'];
+            $time = $destination->meta['time']['value'];
 
             foreach (range(0, $time) as $second) {
                 $trueSecond++;
@@ -106,6 +106,8 @@ class CreateLogFromFlightPath implements ShouldQueue
                     ],
                 ]);
             }
+
+            $origin = $destination;
         }
     }
 
@@ -118,12 +120,24 @@ class CreateLogFromFlightPath implements ShouldQueue
 
         foreach ($paths as $path) {
             $destination = $path;
+            $meta = $path->meta;
 
             if ($origin->ulid === $destination->ulid) {
+                $meta['distance'] = [
+                    'value' => 0,
+                    'unit' => 'meter',
+                ];
+
+                $meta['time'] = [
+                    'value' => 0,
+                    'unit' => 'second',
+                ];
+
+                $path->meta = $meta;
+                $path->save();
+
                 continue;
             }
-
-            $meta = $path->meta;
 
             // get the distance between the origin and destination
             $distance = Geo::getDistanceInMeter($origin->position, $destination->position);
@@ -144,6 +158,8 @@ class CreateLogFromFlightPath implements ShouldQueue
             $path->meta = $meta;
 
             $path->save();
+
+            $origin = $destination;
         }
     }
 }

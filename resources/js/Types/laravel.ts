@@ -31,7 +31,7 @@ interface Path {
 interface Flight {
   paths?: Path[]
   speed: number
-  logs: Log[]
+  logs?: Log[]
   planned_altitude: number
   altitude: number | null
   to: Point
