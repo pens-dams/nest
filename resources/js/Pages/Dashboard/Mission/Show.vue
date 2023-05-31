@@ -5,7 +5,9 @@ import {
   onMounted,
   PropType,
   reactive,
+  Ref,
   ref,
+  toRaw,
   toRefs,
   watch,
 } from 'vue'
@@ -20,6 +22,7 @@ import * as THREE from 'three'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { router } from '@inertiajs/vue3'
 import route from 'ziggy-js'
+import addMinutes from 'date-fns/addMinutes'
 
 const props = defineProps({
   drone: Object as PropType<DroneModel>,
@@ -28,8 +31,17 @@ const props = defineProps({
 
 const randomColor = _.sample(THREE.Color.NAMES)
 
-const isFormCreateActive = ref(false)
-const isLookingForPoint = ref(false)
+const isFormCreateActive: Ref<boolean> = ref(false)
+const isFormEditActive: Ref<boolean> = ref(false)
+const isLookingForPoint: Ref<boolean> = ref(false)
+const selectedFlightUlid: Ref<string | null> = ref(null)
+
+const selectedFlight = computed(() => {
+  return _.find(
+    toRaw(props.flights),
+    (flight) => flight.ulid == selectedFlightUlid.value
+  )
+})
 
 const { drone } = toRefs(props)
 
@@ -37,6 +49,34 @@ const mapElement = ref()
 
 const departureTime = ref()
 const points: ReactiveVariable<Point[]> = reactive([])
+
+watch(selectedFlightUlid, (newValue) => {
+  if (newValue === null) {
+    isFormEditActive.value = false
+    points.splice(0, points.length)
+    return
+  }
+
+  isFormEditActive.value = true
+  if (selectedFlight.value?.departure) {
+    let date = new Date(selectedFlight.value.departure)
+
+    date = addMinutes(date, date.getTimezoneOffset())
+
+    departureTime.value = date.toISOString().slice(0, 16)
+  }
+  points.splice(0, points.length)
+
+  for (const path of selectedFlight.value?.paths ?? []) {
+    points.push(
+      new Point({
+        lat: path.position.coordinates[1],
+        lng: path.position.coordinates[0],
+        altitude: path.altitude,
+      })
+    )
+  }
+})
 
 points.push(
   new Point({
@@ -76,6 +116,13 @@ const saveFlight = () => {
       },
     }
   )
+}
+
+const clearForm = () => {
+  isFormCreateActive.value = false
+  isFormEditActive.value = false
+  selectedFlightUlid.value = null
+  points.splice(1, points.length - 1)
 }
 
 onMounted(async () => {
@@ -168,7 +215,7 @@ onMounted(async () => {
           </div>
         </div>
         <div
-          v-if="isFormCreateActive"
+          v-if="isFormCreateActive || isFormEditActive"
           class="border-b mt-5 border-gray-200 bg-white px-4 py-5 sm:px-6 w-full"
         >
           <div class="-ml-4 -mt-2 flex flex-wrap items-center justify-between">
@@ -178,7 +225,7 @@ onMounted(async () => {
               </h3>
             </div>
             <div class="mt-2 text-right">
-              <a href="#" @click="isFormCreateActive = false">
+              <a href="#" @click="clearForm">
                 <XMarkIcon class="w-5" />
               </a>
             </div>
@@ -275,12 +322,20 @@ onMounted(async () => {
           </div>
         </div>
         <div
-          v-else
           class="border-b mt-5 border-gray-200 bg-white px-4 py-5 sm:px-6 w-full"
         >
           <div class="-ml-4 -mt-2 flex flex-wrap items-center justify-between">
-            <a href="#" v-for="flight in flights">
-              <div class="border-amber-500 p-3 rounded-md border-2 mt-2">
+            <a
+              href="#"
+              v-for="flight in flights"
+              @click="selectedFlightUlid = flight.ulid"
+            >
+              <div
+                class="border-amber-500 p-3 rounded-md border-2 mt-2"
+                :class="{
+                  'bg-amber-500 text-white': selectedFlightUlid === flight.ulid,
+                }"
+              >
                 #{{ flight.code }}
               </div>
             </a>

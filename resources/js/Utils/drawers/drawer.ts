@@ -107,10 +107,7 @@ abstract class Drawer<T extends Drawable> {
     }
 
     return _.debounce(() => {
-      const dataNonObjects = this.data.filter(
-        (d) => !this.objects.find((o) => o.drawable.id == d.id)
-      )
-      for (const drawable of dataNonObjects) {
+      for (const drawable of this.data) {
         const drawableRaw = toRaw(drawable)
 
         let objectWrapper: Object3DWrapper | undefined = this.objects.find(

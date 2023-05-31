@@ -81,6 +81,8 @@ class MissionController extends Controller
                 'lng' => $point['lng'],
                 'alt' => $point['alt'],
             ];
+
+            $path->save();
         }
 
         Event::dispatch(new FlightCreated($flight));

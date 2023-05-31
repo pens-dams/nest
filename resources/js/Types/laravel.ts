@@ -20,14 +20,23 @@ interface Log {
   meta: object
 }
 
+interface Path {
+  ulid: string
+  sequence: number
+  position: Point
+  altitude: number
+  meta: object
+}
+
 interface Flight {
+  paths?: Path[]
   speed: number
   logs: Log[]
   planned_altitude: number
   altitude: number | null
   to: Point
   code: string
-  id: number
+  ulid: string
   drone?: Drone
   from: Point
   departure: string

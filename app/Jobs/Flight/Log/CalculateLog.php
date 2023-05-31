@@ -49,7 +49,6 @@ class CalculateLog implements ShouldQueue
 
         $currentPoint = new Point($currentLat, $currentLng);
 
-        // calculate ECEF coordinates from current latitude and longitude
         $coordinate = Geo::latLngToVector3Relative(
             point: [
                 'lat' => $currentLat,

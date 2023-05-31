@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Flight\Log;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations;
  * @property  \Illuminate\Support\Carbon  $created_at
  * @property  \Illuminate\Support\Carbon  $updated_at
  * @property string $ulid
+ * @property Collection<int, Flight\Path> $paths
  */
 class Flight extends Model
 {

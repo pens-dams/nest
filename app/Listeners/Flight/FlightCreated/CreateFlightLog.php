@@ -5,6 +5,7 @@ namespace App\Listeners\Flight\FlightCreated;
 use App\Events\Flight\FlightCreated;
 use App\Events\Flight\Log\LogSeriesCreated;
 use App\Jobs\Flight\Log\CalculateLog;
+use App\Jobs\Flight\Log\CreateLogFromFlightPath;
 use App\Supports\Geo;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -30,6 +31,13 @@ class CreateFlightLog implements ShouldQueue
     public function handle(FlightCreated $event): void
     {
         $flight = $event->flight;
+        $batch = Bus::batch([])->name('Create flight log: ' . $flight->ulid);
+
+        if ($flight->paths()->count() > 2) {
+            $batch->add(new CreateLogFromFlightPath($flight));
+
+            return;
+        }
 
         $origin = $flight->from;
 
@@ -59,8 +67,6 @@ class CreateFlightLog implements ShouldQueue
         $flight->meta = $meta;
 
         $flight->save();
-
-        $batch = Bus::batch([])->name('Create flight log: ' . $flight->ulid);
 
         foreach (range(0, $time) as $second) {
             $batch->add(new CalculateLog($flight, $second, $time));
