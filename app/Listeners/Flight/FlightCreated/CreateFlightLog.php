@@ -36,6 +36,8 @@ class CreateFlightLog implements ShouldQueue
         if ($flight->paths()->count() > 2) {
             $batch->add(new CreateLogFromFlightPath($flight));
 
+            $batch->dispatch();
+
             return;
         }
 

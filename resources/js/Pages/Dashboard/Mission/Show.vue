@@ -50,34 +50,6 @@ const mapElement = ref()
 const departureTime = ref()
 const points: ReactiveVariable<Point[]> = reactive([])
 
-watch(selectedFlightUlid, (newValue) => {
-  if (newValue === null) {
-    isFormEditActive.value = false
-    points.splice(0, points.length)
-    return
-  }
-
-  isFormEditActive.value = true
-  if (selectedFlight.value?.departure) {
-    let date = new Date(selectedFlight.value.departure)
-
-    date = addMinutes(date, date.getTimezoneOffset())
-
-    departureTime.value = date.toISOString().slice(0, 16)
-  }
-  points.splice(0, points.length)
-
-  for (const path of selectedFlight.value?.paths ?? []) {
-    points.push(
-      new Point({
-        lat: path.position.coordinates[1],
-        lng: path.position.coordinates[0],
-        altitude: path.altitude,
-      })
-    )
-  }
-})
-
 points.push(
   new Point({
     lat: drone.value.standby_location.coordinates[1],
@@ -140,6 +112,36 @@ onMounted(async () => {
       altitude: 10,
     })
   )
+
+  watch(selectedFlightUlid, (newValue) => {
+    if (newValue === null) {
+      isFormEditActive.value = false
+      points.splice(1, points.length)
+      return
+    }
+
+    isFormEditActive.value = true
+    if (selectedFlight.value?.departure) {
+      let date = new Date(selectedFlight.value.departure)
+
+      date = addMinutes(date, date.getTimezoneOffset())
+
+      departureTime.value = date.toISOString().slice(0, 16)
+    }
+    points.splice(0, points.length)
+
+    for (const path of selectedFlight.value?.paths ?? []) {
+      points.push(
+        new Point({
+          lat: path.position.coordinates[1],
+          lng: path.position.coordinates[0],
+          altitude: path.altitude,
+        })
+      )
+    }
+
+    console.log(selectedFlight.value.logs)
+  })
 
   watch(points, (newPoints) => {
     lineDrawer.clear()

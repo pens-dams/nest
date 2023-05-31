@@ -34,7 +34,7 @@ class MissionController extends Controller
     {
         $title = 'Manage Mission for '.$drone->name;
 
-        $flights = $drone->flights()->with('paths')->get();
+        $flights = $drone->flights()->with(['paths', 'logs'])->get();
 
         return Inertia::render(
             'Dashboard/Mission/Show',

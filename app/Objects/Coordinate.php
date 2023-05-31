@@ -32,7 +32,7 @@ class Coordinate implements Arrayable, JsonSerializable, Jsonable
     {
     }
 
-    public function getDistance(Coordinate $coordinate): float
+    public function getEuclideanDistance(Coordinate $coordinate): float
     {
         $x = $this->x - $coordinate->x;
         $y = $this->y - $coordinate->y;
@@ -44,7 +44,7 @@ class Coordinate implements Arrayable, JsonSerializable, Jsonable
     public function isCollided(Coordinate $coordinate): bool
     {
         // using Euclidean distance formula to calculate distance between two points
-        $distance = $this->getDistance($coordinate);
+        $distance = $this->getEuclideanDistance($coordinate);
 
         return $distance <= self::$collisionThreshold;
     }

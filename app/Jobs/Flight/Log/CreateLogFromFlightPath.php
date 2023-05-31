@@ -33,7 +33,7 @@ class CreateLogFromFlightPath implements ShouldQueue
     {
         $this->fillMetaPathData();
 
-        $this->flight->refresh();
+        $this->flight = $this->flight->refresh();
 
         $paths = $this->flight->paths;
 
@@ -120,6 +120,21 @@ class CreateLogFromFlightPath implements ShouldQueue
             $destination = $path;
 
             if ($origin->ulid === $destination->ulid) {
+                $meta = $path->meta;
+
+                $meta['distance'] = [
+                    'value' => 0,
+                    'unit' => 'meter',
+                ];
+
+                $meta['time'] = [
+                    'value' => 0,
+                    'unit' => 'second',
+                ];
+
+                $path->meta = $meta;
+                $path->save();
+
                 continue;
             }
 

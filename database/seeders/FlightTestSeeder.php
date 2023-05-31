@@ -20,6 +20,7 @@ class FlightTestSeeder extends Seeder
     {
         $this->restoreCsvToTable('flights', database_path('seeders/data/flights.csv'));
         $this->restoreCsvToTable('flight_logs', database_path('seeders/data/flight_logs.csv'));
+        $this->restoreCsvToTable('flight_paths', database_path('seeders/data/flight_paths.csv'));
     }
 
     /**
