@@ -14,7 +14,8 @@ class MonitorController extends Controller
     public function index(): Response
     {
         $flights = Flight::query()
-            ->with('drone', 'logs')
+            ->with('drone', 'logs', 'paths')
+            ->whereHas('paths')
             ->get();
 
         $intersections = Flight\Intersect::query()

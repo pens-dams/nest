@@ -19,6 +19,7 @@ class FlightFactory extends Factory
         return [
             'code' => $this->faker->unique()->randomNumber(5),
             'departure' => now(),
+            'planned_altitude' => $this->faker->numberBetween(50, 80),
         ];
     }
 }

@@ -1,6 +1,6 @@
 type Point = {
   type: string
-  coordinates: Number[]
+  coordinates: number[]
 }
 
 interface Drone {

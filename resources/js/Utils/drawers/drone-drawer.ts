@@ -3,6 +3,9 @@ import * as THREE from 'three'
 import { Object3D } from 'three'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Drone } from '@/Types/local'
+import { ReactiveVariable } from 'vue/macros'
+import { Tween } from '@tweenjs/tween.js'
+import { toRaw } from 'vue'
 
 class DroneDrawer extends Drawer<Drone> {
   private gltf: GLTF
@@ -46,55 +49,47 @@ class DroneDrawer extends Drawer<Drone> {
     }
   }
 
-  protected animateDrone(drone: Drone): void {
-    if (drone.destination == null) {
+  protected animateDrone(drone: ReactiveVariable<Drone>): void {
+    const paths = drone.paths
+
+    const firstPath = paths[0] ?? null
+
+    if (firstPath == null) {
       return
     }
 
-    if (
-      drone.current.lat == drone.destination.lat &&
-      drone.current.lng == drone.destination.lng
-    ) {
-      return
-    }
+    const pathBefore = firstPath
 
-    const distance = google.maps.geometry.spherical.computeDistanceBetween(
-      new google.maps.LatLng(drone.origin.lat, drone.origin.lng),
-      new google.maps.LatLng(drone.destination.lat, drone.destination.lng)
-    )
+    let delayInSeconds = 0
+    for (const path of paths) {
+      if (path == pathBefore) {
+        continue
+      }
 
-    // km/h
-    const time = (distance / drone.speed) * 1000 // ms
+      setTimeout(() => {
+        const animation = new Tween(toRaw(pathBefore.position))
+        animation.to(toRaw(path.position), (path.seconds ?? 1) * 1000)
 
-    const start = Date.now()
+        animation.onUpdate((object) => {
+          drone.current = {
+            lat: object.lat,
+            lng: object.lng,
+            altitude: object.altitude,
+          }
+        })
 
-    const animate = () => {
-      const now = Date.now()
-      const elapsed = now - start
+        const animate = () => {
+          requestAnimationFrame(animate)
 
-      const progress = Math.min(elapsed / time, 1)
-
-      if (progress != 0) {
-        const lat =
-          drone.origin.lat +
-          (drone.destination.lat - drone.origin.lat) * progress
-        const lng =
-          drone.origin.lng +
-          (drone.destination.lng - drone.origin.lng) * progress
-
-        drone.current = {
-          lat,
-          lng,
-          altitude: drone.current.altitude,
+          animation.update()
         }
-      }
 
-      if (progress < 1) {
-        window.requestAnimationFrame(animate)
-      }
+        animation.start()
+        animate()
+      }, 1000 * delayInSeconds)
+
+      delayInSeconds += path.seconds ?? 1
     }
-
-    animate()
   }
 
   private async loadDroneModel(): Promise<GLTF> {
@@ -104,7 +99,6 @@ class DroneDrawer extends Drawer<Drone> {
       loader.load('/files/drone.glb', (gltf) => {
         gltf.scene.scale.set(25, 25, 25)
         gltf.scene.rotation.x = (90 * Math.PI) / 180
-        // this.scene.add(gltf.scene)
 
         console.log('Drone model loaded')
         resolve(gltf)

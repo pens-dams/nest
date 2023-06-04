@@ -107,16 +107,12 @@ onMounted(async () => {
   const lineDrawer = googleMap.threeRenderer.getDrawer<LineDrawer>(LineDrawer)
   const dotDrawer = googleMap.threeRenderer.getDrawer<DotDrawer>(DotDrawer)
 
-  await droneDrawer.addData(
-    new Drone(drone.value, {
-      lat: drone.value.standby_location.coordinates[1],
-      lng: drone.value.standby_location.coordinates[0],
-      altitude: 10,
-    })
-  )
-
   watch(selectedFlightUlid, (newValue) => {
     if (newValue === null) {
+      dotDrawer.clear()
+      lineDrawer.clear()
+      droneDrawer.clear()
+
       isFormEditActive.value = false
       points.splice(1, points.length)
       return
@@ -130,8 +126,22 @@ onMounted(async () => {
 
       departureTime.value = date.toISOString().slice(0, 16)
     }
-    points.splice(0, points.length)
 
+    droneDrawer.addData(
+      new Drone(
+        selectedFlight.value.drone,
+        selectedFlight.value.logs.map((log) => ({
+          position: {
+            lat: log.position.coordinates[1],
+            lng: log.position.coordinates[0],
+            altitude: log.altitude,
+          },
+          speed: log.speed,
+        }))
+      )
+    )
+
+    points.splice(0, points.length)
     for (const path of selectedFlight.value?.paths ?? []) {
       points.push(
         new Point({
@@ -142,7 +152,6 @@ onMounted(async () => {
       )
     }
 
-    dotDrawer.clear()
     for (const log of selectedFlight.value.logs) {
       dotDrawer.addData(
         new Point(
@@ -155,6 +164,10 @@ onMounted(async () => {
         )
       )
     }
+
+    setTimeout(() => {
+      droneDrawer.startAnimation()
+    }, 4000)
   })
 
   watch(points, (newPoints) => {
@@ -211,7 +224,7 @@ onMounted(async () => {
       >
         <div ref="mapElement" />
       </div>
-      <div class="h-75 w-1/4 p-4">
+      <div class="h-75 w-300 p-4">
         <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6 w-full">
           <div
             class="-ml-4 -mt-2 flex flex-wrap items-center justify-between sm:flex-nowrap"

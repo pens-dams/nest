@@ -1,19 +1,39 @@
 import { Drone as DroneModel, Flight } from './laravel'
 import { Drawable } from '@/Utils/drawers/drawer'
 import { ulid } from 'ulid'
+import { toRaw } from 'vue'
+
+interface Path {
+  position: google.maps.LatLngAltitudeLiteral
+  coordinate?: {
+    x: number
+    y: number
+    z: number
+  }
+  seconds?: number
+  speed?: number
+  datetime?: Date
+}
 
 class Drone implements Drawable {
+  public id: string
+  public current: google.maps.LatLngAltitudeLiteral | null
+
   constructor(
     public readonly drone: DroneModel,
-    public current: google.maps.LatLngAltitudeLiteral,
-    public readonly origin: google.maps.LatLngAltitudeLiteral | null = null,
-    public readonly destination: google.maps.LatLngAltitudeLiteral | null = null,
-    public speed: number = 10
+    public readonly paths: Path[] = []
   ) {
     this.id = ulid()
+    if (paths.length > 0) {
+      this.current = toRaw(paths[0].position)
+    } else {
+      this.current = {
+        lat: drone.standby_location.coordinates[1],
+        lng: drone.standby_location.coordinates[0],
+        altitude: 0,
+      }
+    }
   }
-
-  id: string
 }
 
 class Line implements Drawable {

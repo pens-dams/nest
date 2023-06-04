@@ -8,7 +8,8 @@ import { Drone, Line, Point } from '@/Types/local'
 import DroneDrawer from '@/Utils/drawers/drone-drawer'
 import LineDrawer from '@/Utils/drawers/line-drawer'
 import DotDrawer from '@/Utils/drawers/dot-drawer'
-import LatLngAltitudeLiteral = google.maps.LatLngAltitudeLiteral
+import _ from 'lodash'
+import * as THREE from 'three'
 
 const mapElement = ref()
 
@@ -23,30 +24,8 @@ const props = defineProps({
   },
 })
 
-const drones = _.map(props.flights, (flight: Flight) => {
-  const origin: LatLngAltitudeLiteral = {
-    lat: flight.from.coordinates[1],
-    lng: flight.from.coordinates[0],
-    altitude: flight.planned_altitude,
-  }
-
-  const destination: LatLngAltitudeLiteral = {
-    lat: flight.to.coordinates[1],
-    lng: flight.to.coordinates[0],
-    altitude: flight.planned_altitude,
-  }
-
-  const current: LatLngAltitudeLiteral = {
-    lat: flight.from.coordinates[1],
-    lng: flight.from.coordinates[0],
-    altitude: flight.planned_altitude,
-  }
-
-  return new Drone(flight.drone, current, origin, destination, flight.speed)
-})
-
 onMounted(async () => {
-  if (drones.length === 0) {
+  if (props.flights.length === 0) {
     return
   }
 
@@ -55,52 +34,52 @@ onMounted(async () => {
 
   const droneDrawer =
     googleMap.threeRenderer.getDrawer<DroneDrawer>(DroneDrawer)
+  const lineDrawer = googleMap.threeRenderer.getDrawer<LineDrawer>(LineDrawer)
+  const dotDrawer = googleMap.threeRenderer.getDrawer<DotDrawer>(DotDrawer)
 
-  for (const drone of drones) {
-    await droneDrawer.addData(drone)
-  }
-  droneDrawer.startAnimation()
-
-  const lineDrawer = await googleMap.threeRenderer.getDrawer<LineDrawer>(
-    LineDrawer
-  )
   for (const flight of props.flights) {
-    await lineDrawer.addData(
-      new Line(
-        {
-          lat: flight.from.coordinates[1],
-          lng: flight.from.coordinates[0],
-          altitude: flight.planned_altitude ?? 40,
-        },
-        {
-          lat: flight.to.coordinates[1],
-          lng: flight.to.coordinates[0],
-          altitude: flight.planned_altitude ?? 40,
-        },
-        flight
-      )
+    const points: google.maps.LatLngAltitudeLiteral[] = flight.paths.map(
+      (path) => {
+        return {
+          lat: path.position.coordinates[1],
+          lng: path.position.coordinates[0],
+          altitude: path.altitude,
+        }
+      }
     )
 
-    // let i = 1
-    //   for (const log of flight.logs) {
-    //     setTimeout(async () => {
-    //       await dotDrawer.addData(
-    //         new Point(
-    //           {
-    //             lat: log.position.coordinates[1],
-    //             lng: log.position.coordinates[0],
-    //             altitude: log.altitude,
-    //           },
-    //           2
-    //         )
-    //       )
-    //     }, 1000 * i++)
-    //   }
-  }
+    const lineColor = _.sample(THREE.Color.NAMES)
+    const firstPoint = points[0] ?? null
 
-  const dotDrawer = await googleMap.threeRenderer.getDrawer<DotDrawer>(
-    DotDrawer
-  )
+    let pointBefore = firstPoint
+
+    for (const point of points) {
+      if (pointBefore == point) {
+        continue
+      }
+
+      await lineDrawer.addData(new Line(pointBefore, point, flight, lineColor))
+
+      pointBefore = point
+    }
+
+    if (firstPoint) {
+      await droneDrawer.addData(
+        new Drone(
+          flight.drone,
+          flight.paths.map((path) => ({
+            position: {
+              lat: path.position.coordinates[1],
+              lng: path.position.coordinates[0],
+              altitude: path.altitude,
+            },
+            speed: flight.speed,
+            seconds: _.get(path.meta, 'time.value', null),
+          }))
+        )
+      )
+    }
+  }
 
   for (const intersect of props.intersections) {
     const data = new Point(null, intersect.radius, 0xff0000, {
@@ -113,6 +92,10 @@ onMounted(async () => {
   }
 
   googleMap.threeRenderer.start()
+
+  setTimeout(() => {
+    droneDrawer.startAnimation()
+  }, 3000)
 })
 </script>
 

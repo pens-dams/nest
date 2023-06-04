@@ -36,6 +36,10 @@ class CreateFlightLog implements ShouldQueue
 
         $batch = Bus::batch([])->name('Create flight log: ' . $flight->ulid);
 
+        $batch->then(function () use ($flight) {
+            Event::dispatch(new LogSeriesCreated($flight));
+        });
+
         if ($flight->paths()->count() > 2) {
             $batch->add(new CreateLogFromFlightPath($flight));
 
@@ -76,10 +80,6 @@ class CreateFlightLog implements ShouldQueue
         foreach (range(0, $time) as $second) {
             $batch->add(new CalculateLog($flight, $second, $time));
         }
-
-        $batch->then(function () use ($flight) {
-            Event::dispatch(new LogSeriesCreated($flight));
-        });
 
         $batch->dispatch();
     }
