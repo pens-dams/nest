@@ -50,7 +50,7 @@ class CalculateFlightCollision implements ShouldQueue
         $otherFlightLogs = $logQuery(Flight\Log::query())
             ->where('flight_id', '!=', $flightUlid)
             ->orderBy('flight_id')
-            ->get();
+            ->cursor();
 
         $coordinates = $flightLogs->map(fn($log) => new Coordinate (
             $log->ulid,
@@ -60,13 +60,16 @@ class CalculateFlightCollision implements ShouldQueue
             $log->meta['coordinate']['z']
         ));
 
-        $comparableCoordinates = $otherFlightLogs->map(fn($log) => new Coordinate (
+        $comparableCoordinates = collect();
+
+        // @phpstan-ignore-next-line
+        $otherFlightLogs->each(fn(Flight\Log $log) => $comparableCoordinates->push(new Coordinate (
             $log->ulid,
             $log->flight_id,
             $log->meta['coordinate']['x'],
             $log->meta['coordinate']['y'],
             $log->meta['coordinate']['z']
-        ));
+        )));
 
         foreach ($comparableCoordinates as $comparableCoordinate) {
             foreach ($coordinates as $log) {
@@ -99,15 +102,5 @@ class CalculateFlightCollision implements ShouldQueue
         } else {
             Bus::dispatch($job);
         }
-    }
-
-    /**
-     * Get the middleware the job should pass through.
-     *
-     * @return array<int, object>
-     */
-    public function middleware(): array
-    {
-        return [(new WithoutOverlapping())->releaseAfter(5)];
     }
 }

@@ -19,6 +19,7 @@
         "laravel/tinker": "^2.7",
         "league/csv": "^9.9",
         "matanyadaev/laravel-eloquent-spatial": "^3.1",
+        "sentry/sentry-laravel": "^3.4",
         "tightenco/ziggy": "^1.0"
     },
     "require-dev": {
@@ -76,7 +77,10 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
-        "process-timeout": 0
+        "process-timeout": 0,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true
