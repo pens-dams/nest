@@ -224,7 +224,7 @@ onMounted(async () => {
       >
         <div ref="mapElement" />
       </div>
-      <div class="h-75 w-300 p-4">
+      <div class="h-[50rem] w-[32rem] overflow-auto p-4">
         <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6 w-full">
           <div
             class="-ml-4 -mt-2 flex flex-wrap items-center justify-between sm:flex-nowrap"
