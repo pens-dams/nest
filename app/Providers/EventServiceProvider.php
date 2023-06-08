@@ -37,7 +37,6 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(LogSeriesCreated::class, function (LogSeriesCreated $event) {
-//            Bus::dispatch(new CalculateFlightCollision($event->flight));
             Bus::batch([new CalculateFlightCollision($event->flight)])
                 ->name('Calculate flight collision for flight: ' . $event->flight->ulid)
                 ->dispatch();

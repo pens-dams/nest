@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
                         return;
                     }
 
-                    $knownLocations = collect(DroneFactory::$knownLocations)
+                    $knownLocations = collect(DroneFactory::knownLocationsRandomizer())
                         ->reject(function ($location) use ($drone) {
                             return $location['lat'] === $drone->standby_location->latitude
                                 && $location['lng'] === $drone->standby_location->longitude;
@@ -55,51 +55,12 @@ class DatabaseSeeder extends Seeder
                         ->afterCreating(function (Flight $flight) {
                             $sequence = 1;
 
-                            $path = new Flight\Path();
-                            $path->flight()->associate($flight);
-
-                            $path->position = new Point(
-                                $flight->drone->standby_location->latitude,
-                                $flight->drone->standby_location->longitude,
-                            );
-                            $path->altitude = $this->faker()->numberBetween(50, 60);
-                            $path->sequence = $sequence++;
-                            $path->meta = [
-                                'lat' => $path->position->latitude,
-                                'lng' => $path->position->longitude,
-                                'alt' => $path->altitude,
-                            ];
-
-                            $path->save();
-
-                            $locationMock = new ObjectMovementMocker(
-                                latitude: $flight->drone->standby_location->latitude,
-                                longitude: $flight->drone->standby_location->longitude,
-                                altitude: $flight->planned_altitude,
-                            );
-
-                            $degreeRandomizer = function () {
-                                $left = $this->faker()->numberBetween(30, 150);
-                                $right = $this->faker()->numberBetween(210, 330);
-
-                                return $this->faker()->randomElement([$left, $right]);
-                            };
-
-                            foreach (range(1, $this->faker()->numberBetween(2, 10)) as $step) {
-                                $locationMock->turn($degreeRandomizer());
-
-                                $locationMock->advance(
-                                    $this->faker()->numberBetween(30, 300),
-                                );
-
+                            $createPath = function (Point $position) use ($flight, &$sequence): void {
                                 $path = new Flight\Path();
                                 $path->flight()->associate($flight);
 
-                                $path->position = new Point(
-                                    $locationMock->getLatitude(),
-                                    $locationMock->getLongitude(),
-                                );
-                                $path->altitude = $flight->planned_altitude;
+                                $path->position = $position;
+                                $path->altitude = $this->faker()->numberBetween(50, 60);
                                 $path->sequence = $sequence++;
                                 $path->meta = [
                                     'lat' => $path->position->latitude,
@@ -108,7 +69,16 @@ class DatabaseSeeder extends Seeder
                                 ];
 
                                 $path->save();
-                            }
+                            };
+
+                            $createPath($flight->from);
+                            $this->randomMovement($flight, $sequence);
+                            /** @var Flight\Path $lastPath */
+                            $lastPath = $flight->paths()->latest()->firstOrFail();
+                            $flight->to = new Point(
+                                $lastPath->position->latitude,
+                                $lastPath->position->longitude,
+                            );
                         })
                         ->create([
                             'drone_id' => $drone->id,
@@ -131,6 +101,47 @@ class DatabaseSeeder extends Seeder
                 // @phpstan-ignore-next-line
                 Event::dispatch(new FlightCreated($flight));
             }
+        }
+    }
+
+    private function randomMovement(Flight $flight, int $sequence): void
+    {
+        $locationMock = new ObjectMovementMocker(
+            latitude: $flight->drone->standby_location->latitude,
+            longitude: $flight->drone->standby_location->longitude,
+            altitude: $flight->planned_altitude,
+        );
+
+        $degreeRandomizer = function (): int {
+            $left = $this->faker()->numberBetween(50, 120);
+            $right = $this->faker()->numberBetween(240, 300);
+
+            return $this->faker()->randomElement([$left, $right]);
+        };
+
+        foreach (range(1, $this->faker()->numberBetween(2, 10)) as $step) {
+            $locationMock->turn($degreeRandomizer());
+
+            $locationMock->advance(
+                $this->faker()->numberBetween(50, 300),
+            );
+
+            $path = new Flight\Path();
+            $path->flight()->associate($flight);
+
+            $path->position = new Point(
+                $locationMock->getLatitude(),
+                $locationMock->getLongitude(),
+            );
+            $path->altitude = $this->faker()->numberBetween(50, 60);
+            $path->sequence = $sequence++;
+            $path->meta = [
+                'lat' => $path->position->latitude,
+                'lng' => $path->position->longitude,
+                'alt' => $path->altitude,
+            ];
+
+            $path->save();
         }
     }
 }

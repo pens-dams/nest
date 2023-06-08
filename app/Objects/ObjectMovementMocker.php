@@ -19,7 +19,7 @@ class ObjectMovementMocker
 
     public function turn(int $degree): void
     {
-        $this->heading = $degree;
+        $this->heading += $degree;
     }
 
     public function advance(int $distanceInMeter): void

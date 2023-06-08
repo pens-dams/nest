@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedInteger('sequence');
             $table->point('position');
             $table->double('altitude');
+            $table->double('speed')->nullable();
             $table->json('meta')->nullable();
             $table->timestamps();
         });

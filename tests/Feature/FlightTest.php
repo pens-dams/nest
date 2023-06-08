@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Events\Flight\FlightCreated;
 use App\Jobs\Flight\CalculateAllCollision;
+use App\Jobs\Flight\CalculateFlightCollision;
 use App\Models\Flight;
 use Database\Seeders\FlightTestSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,9 +18,7 @@ class FlightTest extends TestCase
 
     public function test_euclidean_distance_calculation(): void
     {
-//        $this->seed(FlightTestSeeder::class);
-
-        $batch = Bus::batch([
+        Bus::batch([
             new CalculateAllCollision(),
         ])->dispatch();
 
@@ -35,5 +34,17 @@ class FlightTest extends TestCase
         Event::dispatch(new FlightCreated($flight));
 
         $this->assertGreaterThan(1, $flight->logs()->count());
+    }
+
+    public function test_single_flight_intersect_detector(): void
+    {
+        $flights = Flight::all();
+
+        Bus::batch(
+            $flights->map(fn(Flight $flight) => new CalculateFlightCollision($flight))->toArray()
+        )->dispatch();
+
+        $this->assertTrue(true);
+        $this->assertDatabaseCount('flight_intersects', 3);
     }
 }

@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpRedundantVariableDocTypeInspection */
 
 namespace App\Jobs\Flight;
 
@@ -11,9 +11,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\LazyCollection;
+use RuntimeException;
 
 class CalculateFlightCollision implements ShouldQueue
 {
@@ -60,21 +63,33 @@ class CalculateFlightCollision implements ShouldQueue
             $log->meta['coordinate']['z']
         ));
 
-        $comparableCoordinates = collect();
+        $coordinateCluster = new CalculateFlightCollision\CoordinateCluster($otherFlightLogs);
 
-        // @phpstan-ignore-next-line
-        $otherFlightLogs->each(fn(Flight\Log $log) => $comparableCoordinates->push(new Coordinate (
-            $log->ulid,
-            $log->flight_id,
-            $log->meta['coordinate']['x'],
-            $log->meta['coordinate']['y'],
-            $log->meta['coordinate']['z']
-        )));
+        // forget other flight logs to free-up memory
+        unset($otherFlightLogs);
 
-        foreach ($comparableCoordinates as $comparableCoordinate) {
-            foreach ($coordinates as $log) {
-                if (($distance = $log->getEuclideanDistance($comparableCoordinate)) < Coordinate::$collisionThreshold) {
-                    $collision = new Collision([$log, $comparableCoordinate], $distance);
+        foreach ($coordinates as $coordinate) {
+            /** @var Coordinate $coordinate */
+            $x = (int)floor($coordinate->x);
+            $y = (int)floor($coordinate->y);
+
+            try {
+                $otherNearestCoordinates = $coordinateCluster->getClusterFor($x, $y);
+            } catch (RuntimeException) {
+                Log::warning('Could not find cluster for coordinate', [
+                    'x' => $x,
+                    'y' => $y,
+                    'meta' => $coordinateCluster->getMeta(),
+                ]);
+                continue;
+            }
+
+            foreach ($otherNearestCoordinates as $otherNearestCoordinate) {
+                /** @var Coordinate $otherNearestCoordinate */
+                $distance = $coordinate->getEuclideanDistance($otherNearestCoordinate);
+
+                if ($distance < Coordinate::$collisionThreshold) {
+                    $collision = new Collision([$coordinate, $otherNearestCoordinate], $distance);
                     $this->storeCollision($collision);
                 }
             }

@@ -16,6 +16,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
  * @property  int $sequence
  * @property  Point $position
  * @property  float $altitude
+ * @property  float $speed
  * @property  array $meta
  * @property  Carbon $created_at
  * @property  Carbon $updated_at
@@ -34,6 +35,7 @@ class Path extends Model
         'position' => Point::class,
         'meta' => 'array',
         'altitude' => 'float',
+        'speed' => 'float',
         'sequence' => 'int',
     ];
 

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Drone;
+use App\Objects\ObjectMovementMocker;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
@@ -48,6 +49,40 @@ class DroneFactory extends Factory
     ];
 
     /**
+     * @return array<int, array{lat: float, lng: float}>
+     */
+    public static function knownLocationsRandomizer(): array
+    {
+        $faker = \Faker\Factory::create();
+
+        return array_map(static function (array $location) use($faker): array {
+            $locationMock = new ObjectMovementMocker(
+                latitude: $location['lat'],
+                longitude: $location['lng'],
+                altitude: 15,
+            );
+
+            $degreeRandomizer = function () use ($faker): int {
+                $left = $faker->numberBetween(80, 100);
+                $right = $faker->numberBetween(80, 100);
+
+                return $faker->boolean ? $left : -$right;
+            };
+            foreach (range(1, $faker->numberBetween(2, 3)) as $step) {
+                $locationMock->turn($degreeRandomizer());
+                $locationMock->advance(
+                    $faker->numberBetween(50, 80),
+                );
+            }
+
+            return [
+                'lat' => $locationMock->getLatitude(),
+                'lng' => $locationMock->getLongitude(),
+            ];
+        }, self::$knownLocations);
+    }
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -55,8 +90,12 @@ class DroneFactory extends Factory
     public function definition(): array
     {
         /** @var array{lat: float, lng: float} $location */
-        $location = $this->faker->randomElement(self::$knownLocations);
-        $point = new Point($location['lat'], $location['lng']);
+        $location = $this->faker->randomElement(self::knownLocationsRandomizer());
+
+        $point = new Point(
+            latitude: $location['lat'],
+            longitude: $location['lng'],
+        );
 
         return [
             'name' => $this->faker->lastName() . '\'s drone.',

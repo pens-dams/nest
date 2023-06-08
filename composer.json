@@ -8,6 +8,7 @@
         "php": "^8.2",
         "dentro/yalr": "^1.2",
         "guzzlehttp/guzzle": "^7.2",
+        "hi-folks/statistics": "^0.2.1",
         "inertiajs/inertia-laravel": "^v0.6.9",
         "jtejido/geodesy-php": "^1.41",
         "laravel/fortify": "^1.13",

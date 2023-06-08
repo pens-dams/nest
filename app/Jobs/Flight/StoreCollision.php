@@ -21,9 +21,8 @@ class StoreCollision implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
-    /**
-     * Create a new job instance.
-     */
+    public int $tries = 1;
+
     public function __construct(
         protected Collision $collision,
         protected ?int      $intersectNumber = null,
@@ -39,8 +38,17 @@ class StoreCollision implements ShouldQueue
      */
     public function middleware(): array
     {
+        $collisionPoint = $this->collision->getMiddlePoint();
+
+        $key = null;
+
+        if ($collisionPoint) {
+            $key = ".$collisionPoint->x.$collisionPoint->y.$collisionPoint->z";
+        }
+
         return [
-            (new WithoutOverlapping())->releaseAfter($this->intersectNumber),
+            (new WithoutOverlapping('flight-collision'.$key))
+                ->releaseAfter(now()->addSeconds($this->intersectNumber ?? 1)),
         ];
     }
 
