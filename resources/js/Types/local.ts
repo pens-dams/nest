@@ -58,7 +58,8 @@ class Point implements Drawable {
       x: number
       y: number
       z: number
-    }
+    },
+    public readonly text?: string
   ) {
     this.id = ulid()
   }

@@ -4,6 +4,7 @@ import LineDrawer from '@/Utils/drawers/line-drawer'
 import { ThreeJSOverlayView, WORLD_SIZE } from '@googlemaps/three'
 import { AxesHelper } from 'three'
 import DotDrawer from '@/Utils/drawers/dot-drawer'
+import { TextDrawer } from '@/Utils/drawers/text-drawer'
 
 class ThreeRenderer {
   protected drawers: Drawer<any>[] = []
@@ -15,6 +16,7 @@ class ThreeRenderer {
     this.drawers.push(new DroneDrawer())
     this.drawers.push(new LineDrawer())
     this.drawers.push(new DotDrawer())
+    this.drawers.push(new TextDrawer())
 
     this.drawers.forEach((drawer) => {
       drawer.overlay = this.overlay

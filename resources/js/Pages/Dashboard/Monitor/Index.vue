@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue'
 import type { PropType } from 'vue'
-import { onMounted, ref, toRaw } from 'vue'
+import { onMounted, ref } from 'vue'
 import GoogleMap from '@/Utils/google-maps'
 import type { Flight, Intersect } from '@/Types/laravel'
 import { Drone, Line, Point } from '@/Types/local'
@@ -10,6 +10,7 @@ import LineDrawer from '@/Utils/drawers/line-drawer'
 import DotDrawer from '@/Utils/drawers/dot-drawer'
 import _ from 'lodash'
 import * as THREE from 'three'
+import { TextDrawer } from '@/Utils/drawers/text-drawer'
 
 const mapElement = ref()
 
@@ -36,6 +37,7 @@ onMounted(async () => {
     googleMap.threeRenderer.getDrawer<DroneDrawer>(DroneDrawer)
   const lineDrawer = googleMap.threeRenderer.getDrawer<LineDrawer>(LineDrawer)
   const dotDrawer = googleMap.threeRenderer.getDrawer<DotDrawer>(DotDrawer)
+  const textDrawer = googleMap.threeRenderer.getDrawer<TextDrawer>(TextDrawer)
 
   for (const flight of props.flights) {
     const points: google.maps.LatLngAltitudeLiteral[] = flight.paths.map(
@@ -64,6 +66,20 @@ onMounted(async () => {
     }
 
     if (firstPoint) {
+      await textDrawer.addData(
+        new Point(
+          {
+            lat: firstPoint.lat,
+            lng: firstPoint.lng,
+            altitude: firstPoint.altitude,
+          },
+          null,
+          null,
+          null,
+          flight.name ?? flight.drone.name
+        )
+      )
+
       await droneDrawer.addData(
         new Drone(
           flight.drone,

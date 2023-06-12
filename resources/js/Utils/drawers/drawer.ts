@@ -5,6 +5,8 @@ import { reactive, toRaw, watch } from 'vue'
 import _, { forEach } from 'lodash'
 import { ReactiveVariable } from 'vue/macros'
 
+THREE.Cache.enabled = true
+
 export interface Drawable {
   id: string
 }
