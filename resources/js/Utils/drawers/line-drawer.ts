@@ -31,6 +31,7 @@ class LineDrawer extends Drawer<Line> {
       origin.distanceTo(destination),
       8
     )
+
     const material = new THREE.MeshBasicMaterial({
       color: line.color ?? _.sample(THREE.Color.NAMES),
     })

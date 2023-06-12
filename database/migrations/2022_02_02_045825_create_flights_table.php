@@ -29,6 +29,7 @@ return new class extends Migration
             $table->integer('speed')->nullable();
 
             $table->string('name')->nullable();
+            $table->string('color')->nullable();
             $table->json('meta')->nullable();
             $table->timestamps();
         });

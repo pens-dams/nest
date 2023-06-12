@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue'
 import type { PropType } from 'vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, toRaw } from 'vue'
 import GoogleMap from '@/Utils/google-maps'
 import type { Flight, Intersect } from '@/Types/laravel'
 import { Drone, Line, Point } from '@/Types/local'
@@ -48,7 +48,7 @@ onMounted(async () => {
       }
     )
 
-    const lineColor = _.sample(THREE.Color.NAMES)
+    const lineColor = flight.color ?? _.sample(THREE.Color.NAMES)
     const firstPoint = points[0] ?? null
 
     let pointBefore = firstPoint

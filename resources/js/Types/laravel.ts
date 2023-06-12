@@ -40,6 +40,8 @@ interface Flight {
   drone?: Drone
   from: Point
   departure: string
+  name: string | null
+  color: string | null
 }
 
 interface Intersect {

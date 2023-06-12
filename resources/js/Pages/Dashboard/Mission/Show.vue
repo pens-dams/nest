@@ -186,8 +186,6 @@ onMounted(async () => {
 
       pointBefore = point
     }
-
-    console.log(toRaw(newPoints.map((point) => toRaw(point.position))))
   })
 
   googleMap.threeRenderer.start()

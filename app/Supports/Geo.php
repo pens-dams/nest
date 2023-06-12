@@ -112,6 +112,7 @@ class Geo
             self::EARTH_RADIUS * deg2rad($point['lng']),
             self::EARTH_RADIUS * log(tan(0.25 * M_PI + 0.5 * deg2rad($point['lat']))),
         ];
+
     }
 
     /**

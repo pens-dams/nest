@@ -41,7 +41,7 @@ class Line implements Drawable {
     public readonly origin: google.maps.LatLngAltitudeLiteral,
     public readonly destination: google.maps.LatLngAltitudeLiteral,
     public readonly flight?: Flight,
-    public readonly color?: number
+    public readonly color?: number | string
   ) {
     this.id = ulid()
   }

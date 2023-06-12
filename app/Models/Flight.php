@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations;
  * @property  Carbon $departure
  * @property  int  $speed
  * @property  string  $name
+ * @property  string  $color
  * @property  array  $meta
  * @property  \Illuminate\Support\Carbon  $created_at
  * @property  \Illuminate\Support\Carbon  $updated_at
