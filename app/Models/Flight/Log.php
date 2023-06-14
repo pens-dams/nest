@@ -50,6 +50,14 @@ class Log extends Model
      */
     public function flight(): BelongsTo
     {
-        return $this->belongsTo(Flight::class);
+        return $this->belongsTo(Flight::class, 'flight_id');
+    }
+
+    /**
+     * @return BelongsTo<Path, Log>
+     */
+    public function path(): BelongsTo
+    {
+        return $this->belongsTo(Path::class, 'path_id');
     }
 }

@@ -53,7 +53,7 @@ class Point implements Drawable {
   constructor(
     public readonly position: google.maps.LatLngAltitudeLiteral | null = null,
     public readonly radius: number = 0,
-    public readonly color?: number,
+    public readonly color?: number | string,
     public readonly coordinate?: {
       x: number
       y: number

@@ -89,7 +89,7 @@ class CreateLogFromFlightPath implements ShouldQueue
                     ],
                 );
 
-                $this->flight->logs()->create([
+                $log = new Flight\Log([
                     'position' => $currentPoint,
                     'speed' => $flightSpeed,
                     'altitude' => $currentAlt,
@@ -105,6 +105,11 @@ class CreateLogFromFlightPath implements ShouldQueue
                         'anchor' => config('nest.anchor'),
                     ],
                 ]);
+
+                $log->flight()->associate($this->flight);
+                $log->path()->associate($path);
+
+                $log->save();
             }
 
             $origin = $destination;

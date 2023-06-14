@@ -20,7 +20,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
  * @property  array $meta
  * @property  Carbon $created_at
  * @property  Carbon $updated_at
- * @property string $ulid
+ * @property  string $ulid
  */
 class Path extends Model
 {

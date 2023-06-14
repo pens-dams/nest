@@ -21,7 +21,7 @@ class StoreCollision implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
-    public int $tries = 1;
+    public int $tries = 5;
 
     public function __construct(
         protected Collision $collision,
@@ -163,5 +163,6 @@ class StoreCollision implements ShouldQueue
     {
         $intersection->logs()->syncWithoutDetaching($logPoints->pluck('ulid')->unique()->toArray());
         $intersection->flights()->syncWithoutDetaching($logPoints->pluck('flight_id')->unique()->toArray());
+        $intersection->paths()->syncWithoutDetaching($logPoints->pluck('path_id')->unique()->toArray());
     }
 }

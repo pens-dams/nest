@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Events\Flight\FlightCreated;
+use App\Events\Flight\FlightUpdatedOrCreated;
 use App\Jobs\Flight\CalculateAllCollision;
 use App\Jobs\Flight\CalculateFlightCollision;
 use App\Models\Flight;
@@ -31,7 +31,7 @@ class FlightTest extends TestCase
         /** @var Flight $flight */
         $flight = Flight::query()->whereHas('paths', null, '>', 2)->firstOrFail();
 
-        Event::dispatch(new FlightCreated($flight));
+        Event::dispatch(new FlightUpdatedOrCreated($flight));
 
         $this->assertGreaterThan(1, $flight->logs()->count());
     }

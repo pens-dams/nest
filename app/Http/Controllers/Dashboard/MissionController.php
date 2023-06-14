@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Events\Flight\FlightCreated;
+use App\Events\Flight\FlightUpdatedOrCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Drone;
 use App\Models\Flight;
 use Dentro\Yalr\Attributes\Get;
 use Dentro\Yalr\Attributes\Post;
+use Dentro\Yalr\Attributes\Put;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -34,7 +35,7 @@ class MissionController extends Controller
     {
         $title = 'Manage Mission for '.$drone->name;
 
-        $flights = $drone->flights()->with(['paths', 'logs'])->get();
+        $flights = $drone->flights()->with(['paths', 'logs', 'intersections.paths'])->get();
 
         return Inertia::render(
             'Dashboard/Mission/Show',
@@ -67,10 +68,61 @@ class MissionController extends Controller
 
         $flight->save();
 
-        $sequence = 0;
-        foreach ($data['points'] as $point) {
-            $path = new Flight\Path();
+        $this->savePoints($flight, $data['points']);
 
+        Event::dispatch(new FlightUpdatedOrCreated($flight));
+
+        return redirect()
+            ->route('dashboard.mission.show', $drone)
+            ->with('success', 'Flight planning created successfully');
+    }
+
+    #[Put('mission/{flight}', name: 'dashboard.mission.update')]
+    public function update(Request $request, Flight $flight): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => 'nullable|string',
+            'departure' => 'required|date',
+            'points' => 'required|array|min:2',
+            'points.*.lat' => 'required|numeric',
+            'points.*.lng' => 'required|numeric',
+            'points.*.alt' => 'required|numeric',
+        ]);
+
+
+        $firstPoint = $data['points'][0];
+        $lastPoint = $data['points'][count($data['points']) - 1];
+
+        $flight->code = $data['code'] ?? Str::random(5);
+        $flight->departure = Carbon::parse($data['departure']);
+        $flight->from = new Point($firstPoint['lat'], $firstPoint['lng']);
+        $flight->to = new Point($lastPoint['lat'], $lastPoint['lng']);
+
+        $flight->paths()->delete();
+        $flight->logs()->delete();
+
+        $flight->save();
+
+        $this->savePoints($flight, $data['points']);
+
+        Event::dispatch(new FlightUpdatedOrCreated($flight));
+
+        return redirect()
+            ->route('dashboard.mission.show', $flight->drone)
+            ->with('success', 'Flight planning created successfully');
+    }
+
+    /**
+     * @param Flight $flight
+     * @param array<int, array{lat: float, lng: float, alt: float}> $points
+     * @return void
+     */
+    protected function savePoints(Flight $flight, array $points): void
+    {
+        $sequence = 0;
+
+        foreach ($points as $point) {
+            $path = new Flight\Path();
             $path->flight()->associate($flight);
 
             $path->position = new Point($point['lat'], $point['lng']);
@@ -84,11 +136,5 @@ class MissionController extends Controller
 
             $path->save();
         }
-
-        Event::dispatch(new FlightCreated($flight));
-
-        return redirect()
-            ->route('dashboard.mission.show', $drone)
-            ->with('success', 'Flight planning created successfully');
     }
 }

@@ -44,6 +44,24 @@ const selectedFlight = computed(() => {
   )
 })
 
+const knownIntersections = computed(() => {
+  if (!selectedFlight.value) {
+    return []
+  }
+
+  return selectedFlight.value.intersections
+})
+
+const intersectedPointsIds = computed(() => {
+  if (!selectedFlight.value) {
+    return []
+  }
+
+  return selectedFlight.value.intersections
+    .map((intersection) => intersection.paths.map((path) => path.ulid))
+    .flat()
+})
+
 const { drone } = toRefs(props)
 
 const mapElement = ref()
@@ -108,6 +126,8 @@ onMounted(async () => {
   const dotDrawer = googleMap.threeRenderer.getDrawer<DotDrawer>(DotDrawer)
 
   watch(selectedFlightUlid, (newValue) => {
+    let timeout
+
     if (newValue === null) {
       dotDrawer.clear()
       lineDrawer.clear()
@@ -115,6 +135,11 @@ onMounted(async () => {
 
       isFormEditActive.value = false
       points.splice(1, points.length)
+
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+
       return
     }
 
@@ -143,16 +168,36 @@ onMounted(async () => {
 
     points.splice(0, points.length)
     for (const path of selectedFlight.value?.paths ?? []) {
+      const isIntersected = intersectedPointsIds.value.includes(path.ulid)
+
       points.push(
-        new Point({
-          lat: path.position.coordinates[1],
-          lng: path.position.coordinates[0],
-          altitude: path.altitude,
-        })
+        new Point(
+          {
+            lat: path.position.coordinates[1],
+            lng: path.position.coordinates[0],
+            altitude: path.altitude,
+          },
+          1.5,
+          isIntersected ? '#dc2626' : null
+        )
       )
     }
 
-    for (const log of selectedFlight.value.logs) {
+    for (const intersection of knownIntersections.value) {
+      dotDrawer.addData(
+        new Point(
+          {
+            lat: intersection.intersect.coordinates[1],
+            lng: intersection.intersect.coordinates[0],
+            altitude: intersection.altitude,
+          },
+          3,
+          0xff0000
+        )
+      )
+    }
+
+    for (const log of selectedFlight.value?.logs ?? []) {
       dotDrawer.addData(
         new Point(
           {
@@ -165,7 +210,7 @@ onMounted(async () => {
       )
     }
 
-    setTimeout(() => {
+    timeout = setTimeout(() => {
       droneDrawer.startAnimation()
     }, 4000)
   })
@@ -198,11 +243,15 @@ onMounted(async () => {
     const point = e.latLng.toJSON()
 
     points.push(
-      new Point({
-        lat: point.lat,
-        lng: point.lng,
-        altitude: 10,
-      })
+      new Point(
+        {
+          lat: point.lat,
+          lng: point.lng,
+          altitude: 10,
+        },
+        1.5,
+        '#ff0000'
+      )
     )
   })
 })
@@ -275,6 +324,7 @@ onMounted(async () => {
                 </div>
                 <div
                   class="border-amber-500 p-3 rounded-md border-2 mt-2"
+                  :style="{ borderColor: point.color ?? '#000000' }"
                   v-for="(point, index) in points"
                   :key="`point-${index}`"
                 >

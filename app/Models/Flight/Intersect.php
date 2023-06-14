@@ -73,4 +73,20 @@ class Intersect extends Model
             'ulid',
         );
     }
+
+    /**
+     * @return Relations\MorphToMany<Path>
+     */
+    public function paths(): Relations\MorphToMany
+    {
+        return $this->morphedByMany(
+            Path::class,
+            'intersectable',
+            'flight_intersectable',
+            'intersect_ulid',
+            'intersectable_id',
+            'ulid',
+            'ulid',
+        );
+    }
 }

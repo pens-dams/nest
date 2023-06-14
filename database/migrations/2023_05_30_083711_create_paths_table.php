@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('flight_paths', function (Blueprint $table) {
-            $table->ulid();
+            $table->ulid()->primary();
             $table->foreignUlid('flight_id')->constrained('flights', 'ulid')->cascadeOnDelete();
             $table->unsignedInteger('sequence');
             $table->point('position');

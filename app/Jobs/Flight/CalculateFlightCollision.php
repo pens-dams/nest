@@ -40,20 +40,13 @@ class CalculateFlightCollision implements ShouldQueue
     {
         $flightUlid = $this->flight->ulid;
 
-        $logQuery = fn (Builder $query) => $query
+        $flightLogs = $this->flight->logs()
             ->where('meta->progress', '>=', 5)
-            ->where('meta->progress', '<=', 95);
-
-        $flightLogs = $logQuery($this->flight->logs())
+            ->where('meta->progress', '<=', 95)
             ->orderBy('ulid')
             ->get();
 
-        $otherFlightLogs = $logQuery(Flight\Log::query())
-            ->where('flight_id', '!=', $flightUlid)
-            ->orderBy('flight_id')
-            ->cursor();
-
-        $coordinates = $flightLogs->map(fn($log) => new Coordinate (
+        $pointingCoordinates = $flightLogs->map(fn($log) => new Coordinate (
             $log->ulid,
             $log->flight_id,
             $log->meta['coordinate']['x'],
@@ -61,18 +54,15 @@ class CalculateFlightCollision implements ShouldQueue
             $log->meta['coordinate']['z']
         ));
 
-        $coordinateCluster = new CalculateFlightCollision\CoordinateCluster($otherFlightLogs);
+        $coordinateCluster = new CalculateFlightCollision\CoordinateCluster();
 
-        // forget other flight logs to free-up memory
-        unset($otherFlightLogs);
-
-        foreach ($coordinates as $coordinate) {
-            /** @var Coordinate $coordinate */
-            $x = (int)floor($coordinate->x);
-            $y = (int)floor($coordinate->y);
+        foreach ($pointingCoordinates as $pointingCoordinate) {
+            /** @var Coordinate $pointingCoordinate */
+            $x = (int)floor($pointingCoordinate->x);
+            $y = (int)floor($pointingCoordinate->y);
 
             try {
-                $otherNearestCoordinates = $coordinateCluster->getClusterFor($x, $y);
+                $comparableCoordinates = $coordinateCluster->getClusterFor($x, $y);
             } catch (RuntimeException) {
                 Log::warning('Could not find cluster for coordinate', [
                     'x' => $x,
@@ -82,12 +72,16 @@ class CalculateFlightCollision implements ShouldQueue
                 continue;
             }
 
-            foreach ($otherNearestCoordinates as $otherNearestCoordinate) {
-                /** @var Coordinate $otherNearestCoordinate */
-                $distance = $coordinate->getEuclideanDistance($otherNearestCoordinate);
+            foreach ($comparableCoordinates as $comparableCoordinate) {
+                if ($comparableCoordinate->flight === $flightUlid) {
+                    continue;
+                }
+
+                /** @var Coordinate $comparableCoordinate */
+                $distance = $pointingCoordinate->getEuclideanDistance($comparableCoordinate);
 
                 if ($distance < Coordinate::$collisionThreshold) {
-                    $collision = new Collision([$coordinate, $otherNearestCoordinate], $distance);
+                    $collision = new Collision([$pointingCoordinate, $comparableCoordinate], $distance);
                     $this->storeCollision($collision);
                 }
             }

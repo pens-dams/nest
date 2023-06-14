@@ -2,7 +2,7 @@
 
 namespace App\Listeners\Flight\FlightCreated;
 
-use App\Events\Flight\FlightCreated;
+use App\Events\Flight\FlightUpdatedOrCreated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
@@ -20,7 +20,7 @@ class SuggestEmptyFields
      * Handle the event.
      * @throws \Exception
      */
-    public function handle(FlightCreated $event): void
+    public function handle(FlightUpdatedOrCreated $event): void
     {
         $flight = $event->flight;
 

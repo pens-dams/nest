@@ -57,7 +57,7 @@ class CalculateLog implements ShouldQueue
             ],
         );
 
-        $this->flight->logs()->create([
+        $log = new Flight\Log([
             'position' => $currentPoint,
             'speed' => $speed,
             'altitude' => $this->flight->planned_altitude,
@@ -72,6 +72,9 @@ class CalculateLog implements ShouldQueue
                 'anchor' => config('nest.anchor'),
             ],
         ]);
+
+        $log->flight()->associate($this->flight);
+        $log->save();
     }
 
     /**

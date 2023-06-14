@@ -72,6 +72,20 @@ class Flight extends Model
         return $this->hasMany(Flight\Log::class, 'flight_id');
     }
 
+    /**
+     * @return Relations\MorphToMany<Flight\Intersect>
+     */
+    public function intersections(): Relations\MorphToMany
+    {
+        return $this->morphToMany(
+            Flight\Intersect::class,
+            'intersectable',
+            'flight_intersectable',
+            'intersectable_id',
+            'intersect_ulid',
+        );
+    }
+
     protected static function boot(): void
     {
         parent::boot();

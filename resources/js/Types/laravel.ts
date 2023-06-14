@@ -42,6 +42,7 @@ interface Flight {
   departure: string
   name: string | null
   color: string | null
+  intersections?: Intersect[]
 }
 
 interface Intersect {
@@ -51,6 +52,7 @@ interface Intersect {
   radius: number
   collision_time: string
   meta: object
+  paths?: Path[]
 }
 
 export type { Flight, Point, Drone, Log, Intersect }

@@ -3,15 +3,19 @@
 
 namespace App\Jobs\Flight\CalculateFlightCollision;
 
-use App\Objects\Coordinate;
-use Illuminate\Support\Collection;
-use Illuminate\Support\LazyCollection;
 use App\Models\Flight;
+use App\Objects\Coordinate;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\LazyCollection;
 use RuntimeException;
 
 class CoordinateCluster
 {
     const CLUSTER_COUNT = 100;
+
+    const CLUSTER_CACHE_KEY = 'flight:coordinate:cluster';
 
     /**
      * @var Collection<int, Collection<int, Collection<int, Coordinate>>> $clusters
@@ -39,18 +43,9 @@ class CoordinateCluster
         ],
     ];
 
-    /**
-     * @param LazyCollection<int, Flight\Log> $logs
-     */
-    public function __construct(
-        LazyCollection $logs,
-    )
+    public function __construct()
     {
-        $this->clusters = Collection::make();
-
-        $this->buildCluster($logs);
-
-        unset($logs);
+        $this->determineCluster();
     }
 
     /**
@@ -120,8 +115,6 @@ class CoordinateCluster
 
             $this->getClusterFor($x, $y)->push($coordinate);
         });
-
-        unset($coordinates);
     }
 
     /**
@@ -178,5 +171,79 @@ class CoordinateCluster
     public function getMeta(): array
     {
         return $this->meta;
+    }
+
+    private function determineCluster(): void
+    {
+        if ($this->getFromCache()) {
+            return;
+        }
+
+        if ($this->getQuery()->doesntExist()) {
+            $this->clusters = collect();
+            return;
+        }
+
+        /** @var LazyCollection<int, Flight\Log> $logs */
+        $logs = $this->getQuery()->cursor();
+
+        $this->buildCluster($logs);
+        $this->saveToCache($logs->last()?->ulid ?? throw new RuntimeException('No last log found'));
+    }
+
+    private function getFromCache(): bool
+    {
+        /** @var Flight\Log|null $lastLog */
+        $lastLog = Flight\Log::query()
+            ->where('meta->progress', '>=', 5)
+            ->where('meta->progress', '<=', 95)
+            ->latest()
+            ->first();
+
+        if (! $lastLog) {
+            return false;
+        }
+
+        if (Cache::has(self::CLUSTER_CACHE_KEY)) {
+            /**
+             * @var array{
+             *     last_log: string,
+             *     clusters: Collection<int, Collection<int, Collection<int, Coordinate>>>,
+             *     meta: array{
+             *          x: array{min: float, max: float, diff: float, additional: int},
+             *          y: array{min: float, max: float, diff: float, additional: int},
+             *     }
+             * } $cache
+             */
+            $cache = Cache::get(self::CLUSTER_CACHE_KEY);
+
+            if ($cache['last_log'] === $lastLog->ulid) {
+                $this->clusters = $cache['clusters'];
+                $this->meta = $cache['meta'];
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function saveToCache(string $lastUlid): void
+    {
+        Cache::put(self::CLUSTER_CACHE_KEY, [
+            'last_log' => $lastUlid,
+            'clusters' => $this->clusters,
+            'meta' => $this->meta,
+        ], now()->addHours(3));
+    }
+
+    /**
+     * @return Builder<Flight\Log>
+     */
+    private function getQuery(): Builder
+    {
+        return Flight\Log::query()
+            ->where('meta->progress', '>=', 5)
+            ->where('meta->progress', '<=', 95);
     }
 }

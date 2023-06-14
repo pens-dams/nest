@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Events\Flight\FlightCreated;
+use App\Events\Flight\FlightUpdatedOrCreated;
 use App\Events\Flight\Log\LogSeriesCreated;
 use App\Jobs\Flight\CalculateFlightCollision;
 use Illuminate\Auth\Events\Registered;
@@ -23,7 +23,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        FlightCreated::class => [
+        FlightUpdatedOrCreated::class => [
             FlightCreatedListener\SuggestEmptyFields::class,
             FlightCreatedListener\CreateFlightLog::class,
         ],
