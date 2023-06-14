@@ -40,6 +40,10 @@ return [
             'middleware' => 'api',
             'prefix' => 'api',
         ],
+        'sapi' => [
+            'middleware' => ['api', 'auth:api'],
+            'prefix' => 'api/secure',
+        ],
         'dashboard' => [
             'middleware' => [
                 'web',
@@ -63,17 +67,21 @@ return [
 
     'web' => [
         App\Http\Controllers\RootController::class,
-    /** @inject web **/
+        /** @inject web * */
     ],
     'api' => [
         App\Http\Controllers\Api\UserController::class,
-    /** @inject api **/
+        /** @inject api * */
+    ],
+    'sapi' => [
+        App\Http\Controllers\Api\Secure\MissionController::class,
+        /** @inject sapi * */
     ],
     'dashboard' => [
         DashboardController\RootController::class,
         DashboardController\ComputeController::class,
         DashboardController\MissionController::class,
         DashboardController\MonitorController::class,
-    /** @inject dashboard **/
+        /** @inject dashboard * */
     ],
 ];

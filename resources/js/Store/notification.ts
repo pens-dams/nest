@@ -20,6 +20,8 @@ export type ErrorBag = {
 const notifications = reactive<Notification[]>([])
 
 const addSuccessNotification = (message: string) => {
+  console.log('addSuccessNotification', message)
+
   notifications.push({
     type: NotificationType.Success,
     message,

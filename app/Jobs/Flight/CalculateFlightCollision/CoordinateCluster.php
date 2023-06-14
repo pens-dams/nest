@@ -9,13 +9,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\LazyCollection;
-use RuntimeException;
+use App\Exceptions\Flight\CoordinateClusterFault;
 
 class CoordinateCluster
 {
     const CLUSTER_COUNT = 100;
 
     const CLUSTER_CACHE_KEY = 'flight:coordinate:cluster';
+
+    protected string $cacheValidationKey;
 
     /**
      * @var Collection<int, Collection<int, Collection<int, Coordinate>>> $clusters
@@ -43,9 +45,73 @@ class CoordinateCluster
         ],
     ];
 
-    public function __construct()
+    public function reload(): void
     {
-        $this->determineCluster();
+        if ($this->instanceIsInvalid()) {
+            $this->determineCacheOrBuild();
+        }
+    }
+
+    /**
+     * @param int $xPoint
+     * @param int $yPoint
+     * @return Collection<int, Coordinate>
+     * @throws CoordinateClusterFault
+     */
+    public function resolveClusterFor(int $xPoint, int $yPoint): Collection
+    {
+        if (! isset($this->cacheValidationKey) || ! isset($this->clusters)) {
+            $this->determineCacheOrBuild();
+        }
+
+        return $this->getClusterFor($xPoint, $yPoint);
+    }
+
+    /**
+     * @param int $xPoint
+     * @param int $yPoint
+     * @return Collection<int, Coordinate>
+     * @throws CoordinateClusterFault
+     */
+    protected function getClusterFor(int $xPoint, int $yPoint): Collection
+    {
+        /**
+         * @param Collection<int, Collection<int, Coordinate>> $clusterYData
+         * @return Collection<int, Coordinate>
+         * @throws CoordinateClusterFault
+         */
+        $lookingForY = function (Collection $clusterYData) use ($yPoint): Collection {
+            foreach ($clusterYData as $clusterY => $cluster) {
+                /** @var Collection<int, Coordinate> $cluster */
+                if ($yPoint <= $clusterY + $this->meta['y']['additional'] && $yPoint >= $clusterY) {
+                    return $cluster;
+                }
+            }
+
+            if ($yPoint < $this->meta['y']['min'] && $firstData = $clusterYData->first()) {
+                /** @var Collection<int, Coordinate> $firstData */
+                return $firstData;
+            } elseif ($yPoint > $this->meta['y']['max'] && $lastData = $clusterYData->last()) {
+                /** @var Collection<int, Coordinate> $lastData */
+                return $lastData;
+            }
+
+            throw new CoordinateClusterFault('Coordinate Y not found in cluster: ' . $yPoint);
+        };
+
+        foreach ($this->clusters as $clusterX => $clusterYData) {
+            if ($xPoint <= $clusterX + $this->meta['x']['additional'] && $xPoint >= $clusterX) {
+                return $lookingForY($clusterYData);
+            }
+        }
+
+        if ($xPoint < $this->meta['x']['min'] && $firstData = $this->clusters->first()) {
+            return $lookingForY($firstData);
+        } elseif ($xPoint > $this->meta['x']['max'] && $lastData = $this->clusters->last()) {
+            return $lookingForY($lastData);
+        }
+
+        throw new CoordinateClusterFault('Coordinate X not found in cluster: ' . $xPoint);
     }
 
     /**
@@ -118,51 +184,6 @@ class CoordinateCluster
     }
 
     /**
-     * @param int $xPoint
-     * @param int $yPoint
-     * @return Collection<int, Coordinate>
-     */
-    public function getClusterFor(int $xPoint, int $yPoint): Collection
-    {
-        /**
-         * @param Collection<int, Collection<int, Coordinate>> $clusterYData
-         * @return Collection<int, Coordinate>
-         */
-        $lookingForY = function (Collection $clusterYData) use ($yPoint): Collection {
-            foreach ($clusterYData as $clusterY => $cluster) {
-                /** @var Collection<int, Coordinate> $cluster */
-                if ($yPoint <= $clusterY + $this->meta['y']['additional'] && $yPoint >= $clusterY) {
-                    return $cluster;
-                }
-            }
-
-            if ($yPoint < $this->meta['y']['min'] && $firstData = $clusterYData->first()) {
-                /** @var Collection<int, Coordinate> $firstData */
-                return $firstData;
-            } elseif ($yPoint > $this->meta['y']['max'] && $lastData = $clusterYData->last()) {
-                /** @var Collection<int, Coordinate> $lastData */
-                return $lastData;
-            }
-
-            throw new RuntimeException('Coordinate Y not found in cluster: ' . $yPoint);
-        };
-
-        foreach ($this->clusters as $clusterX => $clusterYData) {
-            if ($xPoint <= $clusterX + $this->meta['x']['additional'] && $xPoint >= $clusterX) {
-                return $lookingForY($clusterYData);
-            }
-        }
-
-        if ($xPoint < $this->meta['x']['min'] && $firstData = $this->clusters->first()) {
-            return $lookingForY($firstData);
-        } elseif ($xPoint > $this->meta['x']['max'] && $lastData = $this->clusters->last()) {
-            return $lookingForY($lastData);
-        }
-
-        throw new RuntimeException('Coordinate X not found in cluster: ' . $xPoint);
-    }
-
-    /**
      * @return array{
      *     x: array{min: float, max: float, diff: float, additional: int},
      *     y: array{min: float, max: float, diff: float, additional: int},
@@ -173,7 +194,7 @@ class CoordinateCluster
         return $this->meta;
     }
 
-    private function determineCluster(): void
+    private function determineCacheOrBuild(): void
     {
         if ($this->getFromCache()) {
             return;
@@ -188,7 +209,7 @@ class CoordinateCluster
         $logs = $this->getQuery()->cursor();
 
         $this->buildCluster($logs);
-        $this->saveToCache($logs->last()?->ulid ?? throw new RuntimeException('No last log found'));
+        $this->saveToCache($logs->last()?->ulid ?? throw new CoordinateClusterFault('No last log found'));
     }
 
     private function getFromCache(): bool
@@ -218,6 +239,7 @@ class CoordinateCluster
             $cache = Cache::get(self::CLUSTER_CACHE_KEY);
 
             if ($cache['last_log'] === $lastLog->ulid) {
+                $this->cacheValidationKey = $lastLog->ulid;
                 $this->clusters = $cache['clusters'];
                 $this->meta = $cache['meta'];
 
@@ -230,6 +252,8 @@ class CoordinateCluster
 
     private function saveToCache(string $lastUlid): void
     {
+        $this->cacheValidationKey = $lastUlid;
+
         Cache::put(self::CLUSTER_CACHE_KEY, [
             'last_log' => $lastUlid,
             'clusters' => $this->clusters,
@@ -245,5 +269,21 @@ class CoordinateCluster
         return Flight\Log::query()
             ->where('meta->progress', '>=', 5)
             ->where('meta->progress', '<=', 95);
+    }
+
+    private function instanceIsInvalid(): bool
+    {
+        if (! isset($this->cacheValidationKey)) {
+            return true;
+        }
+
+        /** @var Flight\Log|null $lastLog */
+        $lastLog = Flight\Log::query()
+            ->where('meta->progress', '>=', 5)
+            ->where('meta->progress', '<=', 95)
+            ->orderBy('ulid')
+            ->first();
+
+        return $lastLog?->ulid !== $this->cacheValidationKey;
     }
 }

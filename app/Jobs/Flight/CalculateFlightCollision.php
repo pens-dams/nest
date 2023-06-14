@@ -2,19 +2,18 @@
 
 namespace App\Jobs\Flight;
 
+use App\Exceptions\Flight\CoordinateClusterFault;
 use App\Models\Flight;
 use App\Objects\Collision;
 use App\Objects\Coordinate;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
-use RuntimeException;
 
 class CalculateFlightCollision implements ShouldQueue
 {
@@ -36,9 +35,13 @@ class CalculateFlightCollision implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(CalculateFlightCollision\CoordinateCluster $coordinateCluster): void
     {
+        $coordinateCluster->reload();
+
         $flightUlid = $this->flight->ulid;
+
+        $this->cleanupOldCollisions();
 
         $flightLogs = $this->flight->logs()
             ->where('meta->progress', '>=', 5)
@@ -54,17 +57,15 @@ class CalculateFlightCollision implements ShouldQueue
             $log->meta['coordinate']['z']
         ));
 
-        $coordinateCluster = new CalculateFlightCollision\CoordinateCluster();
-
         foreach ($pointingCoordinates as $pointingCoordinate) {
             /** @var Coordinate $pointingCoordinate */
             $x = (int)floor($pointingCoordinate->x);
             $y = (int)floor($pointingCoordinate->y);
 
             try {
-                $comparableCoordinates = $coordinateCluster->getClusterFor($x, $y);
-            } catch (RuntimeException) {
-                Log::warning('Could not find cluster for coordinate', [
+                $comparableCoordinates = $coordinateCluster->resolveClusterFor($x, $y);
+            } catch (CoordinateClusterFault $e) {
+                Log::warning($e->getMessage(), [
                     'x' => $x,
                     'y' => $y,
                     'meta' => $coordinateCluster->getMeta(),
@@ -95,7 +96,7 @@ class CalculateFlightCollision implements ShouldQueue
      */
     public function tags(): array
     {
-        return ['flight-collision', 'flight:'.$this->flight->ulid];
+        return ['flight-collision', 'flight:' . $this->flight->ulid];
     }
 
     public function storeCollision(Collision $collision): void
@@ -108,6 +109,23 @@ class CalculateFlightCollision implements ShouldQueue
             $this->batch()->add($job);
         } else {
             Bus::dispatch($job);
+        }
+    }
+
+    private function cleanupOldCollisions(): void
+    {
+        $intersections = $this->flight->intersections()->cursor();
+
+        foreach ($intersections as $intersection) {
+            /** @var Flight\Intersect $intersection */
+
+            if ($intersection->flights()->count() === 2) {
+                $intersection->delete();
+
+                continue;
+            }
+
+            $intersection->flights()->detach($this->flight->ulid);
         }
     }
 }

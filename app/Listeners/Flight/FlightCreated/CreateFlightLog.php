@@ -2,7 +2,7 @@
 
 namespace App\Listeners\Flight\FlightCreated;
 
-use App\Events\Flight\FlightUpdatedOrCreated;
+use App\Events\Flight\FlightCreated;
 use App\Events\Flight\Log\LogSeriesCreated;
 use App\Jobs\Flight\Log\CalculateLog;
 use App\Jobs\Flight\Log\CreateLogFromFlightPath;
@@ -28,7 +28,7 @@ class CreateFlightLog implements ShouldQueue
      * Handle the event.
      * @throws \Throwable
      */
-    public function handle(FlightUpdatedOrCreated $event): void
+    public function handle(FlightCreated $event): void
     {
         $flight = $event->flight;
 

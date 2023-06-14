@@ -4,11 +4,12 @@ namespace App\Events\Flight;
 
 use App\Models\Flight;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class FlightUpdatedOrCreated
+class FlightCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -30,7 +31,7 @@ class FlightUpdatedOrCreated
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
+            new PresenceChannel('flight'),
         ];
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Events\Flight\FlightUpdatedOrCreated;
+use App\Events\Flight\FlightCreated;
 use App\Models\Computer;
 use App\Models\Drone;
 use App\Models\Flight;
@@ -99,7 +99,7 @@ class DatabaseSeeder extends Seeder
         if (!app()->environment('testing')) {
             foreach (Flight::query()->cursor() as $flight) {
                 // @phpstan-ignore-next-line
-                Event::dispatch(new FlightUpdatedOrCreated($flight));
+                Event::dispatch(new FlightCreated($flight));
             }
         }
     }

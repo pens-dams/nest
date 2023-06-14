@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Events\Flight\FlightUpdatedOrCreated;
+use App\Events\Flight\FlightCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Drone;
 use App\Models\Flight;
 use Dentro\Yalr\Attributes\Get;
 use Dentro\Yalr\Attributes\Post;
-use Dentro\Yalr\Attributes\Put;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -70,14 +69,14 @@ class MissionController extends Controller
 
         $this->savePoints($flight, $data['points']);
 
-        Event::dispatch(new FlightUpdatedOrCreated($flight));
+        Event::dispatch(new FlightCreated($flight));
 
         return redirect()
             ->route('dashboard.mission.show', $drone)
             ->with('success', 'Flight planning created successfully');
     }
 
-    #[Put('mission/{flight}', name: 'dashboard.mission.update')]
+    #[Post('flight/{flight}', name: 'dashboard.mission.update')]
     public function update(Request $request, Flight $flight): RedirectResponse
     {
         $data = $request->validate([
@@ -105,11 +104,11 @@ class MissionController extends Controller
 
         $this->savePoints($flight, $data['points']);
 
-        Event::dispatch(new FlightUpdatedOrCreated($flight));
+        Event::dispatch(new FlightCreated($flight));
 
         return redirect()
             ->route('dashboard.mission.show', $flight->drone)
-            ->with('success', 'Flight planning created successfully');
+            ->with('success', 'Flight planning '.$flight->name ?? $flight->code.' updated successfully');
     }
 
     /**

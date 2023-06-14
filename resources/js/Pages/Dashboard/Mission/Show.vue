@@ -37,6 +37,8 @@ const isFormEditActive: Ref<boolean> = ref(false)
 const isLookingForPoint: Ref<boolean> = ref(false)
 const selectedFlightUlid: Ref<string | null> = ref(null)
 
+const { drone } = toRefs(props)
+
 const selectedFlight = computed(() => {
   return _.find(
     toRaw(props.flights),
@@ -62,8 +64,6 @@ const intersectedPointsIds = computed(() => {
     .flat()
 })
 
-const { drone } = toRefs(props)
-
 const mapElement = ref()
 
 const departureTime = ref()
@@ -88,8 +88,12 @@ const saveFlight = () => {
 
   const departure = new Date(departureTime.value)
 
+  const url = selectedFlightUlid.value
+    ? route('dashboard.mission.update', { flight: selectedFlightUlid.value })
+    : route('dashboard.mission.store', { drone: drone.value.id })
+
   router.post(
-    route('dashboard.mission.store', { drone: drone.value.id }),
+    url,
     {
       departure: departure.toISOString(),
       points: points.map((point) => {
@@ -101,10 +105,7 @@ const saveFlight = () => {
       }),
     },
     {
-      onSuccess: () => {
-        isFormCreateActive.value = false
-        points.splice(1, points.length - 1)
-      },
+      onSuccess: clearForm,
     }
   )
 }
@@ -154,7 +155,7 @@ onMounted(async () => {
 
     droneDrawer.addData(
       new Drone(
-        selectedFlight.value.drone,
+        selectedFlight.value.drone ?? drone.value,
         selectedFlight.value.logs.map((log) => ({
           position: {
             lat: log.position.coordinates[1],
