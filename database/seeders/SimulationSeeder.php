@@ -10,8 +10,10 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Event;
 
-class TestSeeder extends Seeder
+class SimulationSeeder extends Seeder
 {
+    use Concern\CSVRestorer;
+
     /**
      * Run the database seeds.
      */
@@ -35,7 +37,8 @@ class TestSeeder extends Seeder
             )
             ->create();
 
-        $this->call(FlightTestSeeder::class);
+        $this->restoreCsvToTable('flights', database_path('seeders/data/simulation/flights.csv'));
+        $this->restoreCsvToTable('flight_paths', database_path('seeders/data/simulation/flight_paths.csv'));
 
         if (!app()->environment('testing')) {
             foreach (Flight::query()->cursor() as $flight) {
