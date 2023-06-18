@@ -52,6 +52,7 @@ class MissionController extends Controller
             'points.*.lat' => 'required|numeric',
             'points.*.lng' => 'required|numeric',
             'points.*.alt' => 'required|numeric',
+            'points.*.speed' => 'nullable|numeric',
         ]);
 
         $flight = new Flight();
@@ -80,19 +81,18 @@ class MissionController extends Controller
     public function update(Request $request, Flight $flight): RedirectResponse
     {
         $data = $request->validate([
-            'code' => 'nullable|string',
             'departure' => 'required|date',
             'points' => 'required|array|min:2',
             'points.*.lat' => 'required|numeric',
             'points.*.lng' => 'required|numeric',
             'points.*.alt' => 'required|numeric',
+            'points.*.speed' => 'nullable|numeric',
         ]);
 
 
         $firstPoint = $data['points'][0];
         $lastPoint = $data['points'][count($data['points']) - 1];
 
-        $flight->code = $data['code'] ?? Str::random(5);
         $flight->departure = Carbon::parse($data['departure']);
         $flight->from = new Point($firstPoint['lat'], $firstPoint['lng']);
         $flight->to = new Point($lastPoint['lat'], $lastPoint['lng']);
@@ -126,6 +126,7 @@ class MissionController extends Controller
 
             $path->position = new Point($point['lat'], $point['lng']);
             $path->altitude = $point['alt'];
+            $path->speed = $point['speed'] ?? $flight->speed ?? 15;
             $path->sequence = $sequence++;
             $path->meta = [
                 'lat' => $point['lat'],

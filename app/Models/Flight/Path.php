@@ -16,7 +16,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
  * @property  int $sequence
  * @property  Point $position
  * @property  float $altitude
- * @property  float $speed
+ * @property  float|null $speed
  * @property  array $meta
  * @property  Carbon $created_at
  * @property  Carbon $updated_at

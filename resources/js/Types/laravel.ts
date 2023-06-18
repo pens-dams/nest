@@ -25,6 +25,7 @@ interface Path {
   sequence: number
   position: Point
   altitude: number
+  speed: number
   meta: object
 }
 

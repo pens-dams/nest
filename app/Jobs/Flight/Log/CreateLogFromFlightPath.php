@@ -118,7 +118,7 @@ class CreateLogFromFlightPath implements ShouldQueue
 
     private function fillMetaPathData(): void
     {
-        $speed = $this->flight->speed;
+        $flightSpeed = $this->flight->speed;
         $paths = $this->flight->paths;
 
         $origin = $paths->firstOrFail();
@@ -143,6 +143,8 @@ class CreateLogFromFlightPath implements ShouldQueue
 
                 continue;
             }
+
+            $speed = $path->speed ?? $flightSpeed;
 
             // get the distance between the origin and destination
             $distance = Geo::getDistanceInMeter($origin->position, $destination->position);

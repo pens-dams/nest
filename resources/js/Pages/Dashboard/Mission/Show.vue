@@ -18,19 +18,17 @@ import { ReactiveVariable } from 'vue/macros'
 import { Drone, Line, Point } from '@/Types/local'
 import LineDrawer from '@/Utils/drawers/line-drawer'
 import _ from 'lodash'
-import * as THREE from 'three'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { router } from '@inertiajs/vue3'
 import route from 'ziggy-js'
 import addMinutes from 'date-fns/addMinutes'
 import DotDrawer from '@/Utils/drawers/dot-drawer'
+import { addSuccessNotification } from '@/Store/notification'
 
 const props = defineProps({
   drone: Object as PropType<DroneModel>,
   flights: Array as PropType<Flight[]>,
 })
-
-const randomColor = _.sample(THREE.Color.NAMES)
 
 const isFormCreateActive: Ref<boolean> = ref(false)
 const isFormEditActive: Ref<boolean> = ref(false)
@@ -66,15 +64,31 @@ const intersectedPointsIds = computed(() => {
 
 const mapElement = ref()
 
+class PathPoint extends Point {
+  public speed: number
+
+  constructor(
+    position: { lat: number; lng: number; altitude: number },
+    speed: number,
+    color: string | null = null
+  ) {
+    super(position, 1.5, color ?? '#000000')
+    this.speed = speed
+  }
+}
+
 const departureTime = ref()
-const points: ReactiveVariable<Point[]> = reactive([])
+const points: ReactiveVariable<PathPoint[]> = reactive([])
 
 points.push(
-  new Point({
-    lat: drone.value.standby_location.coordinates[1],
-    lng: drone.value.standby_location.coordinates[0],
-    altitude: 10,
-  })
+  new PathPoint(
+    {
+      lat: drone.value.standby_location.coordinates[1],
+      lng: drone.value.standby_location.coordinates[0],
+      altitude: 10,
+    },
+    0
+  )
 )
 
 const canSaveFlight = computed(() => {
@@ -101,11 +115,19 @@ const saveFlight = () => {
           lat: point.position.lat,
           lng: point.position.lng,
           alt: point.position.altitude,
+          speed: point.speed,
         }
       }),
     },
     {
-      onSuccess: clearForm,
+      onSuccess: () => {
+        clearForm()
+        setTimeout(() => {
+          addSuccessNotification(
+            'Collision detection done in background, please wait a few seconds and refresh the page.'
+          )
+        }, 4000)
+      },
     }
   )
 }
@@ -126,9 +148,8 @@ onMounted(async () => {
   const lineDrawer = googleMap.threeRenderer.getDrawer<LineDrawer>(LineDrawer)
   const dotDrawer = googleMap.threeRenderer.getDrawer<DotDrawer>(DotDrawer)
 
+  let timeout: ReturnType<typeof setTimeout>
   watch(selectedFlightUlid, (newValue) => {
-    let timeout
-
     if (newValue === null) {
       dotDrawer.clear()
       lineDrawer.clear()
@@ -172,13 +193,13 @@ onMounted(async () => {
       const isIntersected = intersectedPointsIds.value.includes(path.ulid)
 
       points.push(
-        new Point(
+        new PathPoint(
           {
             lat: path.position.coordinates[1],
             lng: path.position.coordinates[0],
             altitude: path.altitude,
           },
-          1.5,
+          path.speed,
           isIntersected ? '#dc2626' : null
         )
       )
@@ -227,7 +248,7 @@ onMounted(async () => {
       }
 
       lineDrawer.addData(
-        new Line(pointBefore.position, point.position, null, randomColor)
+        new Line(pointBefore.position, point.position, null, 0xffffff)
       )
 
       pointBefore = point
@@ -244,14 +265,13 @@ onMounted(async () => {
     const point = e.latLng.toJSON()
 
     points.push(
-      new Point(
+      new PathPoint(
         {
           lat: point.lat,
           lng: point.lng,
           altitude: 10,
         },
-        1.5,
-        '#ff0000'
+        0
       )
     )
   })
@@ -364,6 +384,19 @@ onMounted(async () => {
                     >
                     <input
                       v-model="point.position.altitude"
+                      type="number"
+                      name="company-website"
+                      id="company-website"
+                      class="block w-full min-w-0 flex-1 rounded-none rounded-r-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                  <div class="mt-2 flex rounded-md shadow-sm">
+                    <span
+                      class="inline-flex w-1/4 items-center rounded-l-md border border-r-0 border-gray-300 px-3 text-gray-500 sm:text-sm"
+                      >Speed</span
+                    >
+                    <input
+                      v-model="point.speed"
                       type="number"
                       name="company-website"
                       id="company-website"
