@@ -248,7 +248,7 @@ onMounted(async () => {
       }
 
       lineDrawer.addData(
-        new Line(pointBefore.position, point.position, null, 0xffffff)
+        new Line(pointBefore.position, point.position, null, '#334155')
       )
 
       pointBefore = point
